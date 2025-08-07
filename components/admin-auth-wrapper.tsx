@@ -15,17 +15,21 @@ export default function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Check if we have an admin session by calling a protected endpoint
-        const response = await fetch('/api/admin/dashboard')
+        // Check for admin session cookie (simpler approach)
+        const hasAdminCookie = document.cookie.includes('admin-session=')
         
-        if (response.status === 401) {
-          // Not authenticated
-          setIsAuthenticated(false)
-        } else if (response.ok) {
-          // Authenticated
-          setIsAuthenticated(true)
+        if (hasAdminCookie) {
+          // Verify the session is still valid by calling a protected endpoint
+          const response = await fetch('/api/admin/dashboard')
+          
+          if (response.ok) {
+            setIsAuthenticated(true)
+          } else {
+            // Session expired or invalid
+            setIsAuthenticated(false)
+          }
         } else {
-          // Other error, assume not authenticated
+          // No admin session cookie
           setIsAuthenticated(false)
         }
       } catch (error) {
