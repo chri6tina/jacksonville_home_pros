@@ -4,6 +4,14 @@ import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Admin setup POST - Starting...')
+    console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL)
+    console.log('DATABASE_URL preview:', process.env.DATABASE_URL?.substring(0, 50))
+    
+    // Test database connection first
+    await prisma.$connect()
+    console.log('Database connection successful')
+    
     // Check if admin user already exists
     const existingAdmin = await prisma.user.findFirst({
       where: {
@@ -13,6 +21,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingAdmin) {
+      console.log('Admin user already exists:', existingAdmin.id)
       return NextResponse.json({
         success: true,
         message: 'Admin user already exists',
@@ -25,6 +34,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    console.log('Creating new admin user...')
     // Create admin user
     const hashedPassword = await bcrypt.hash('admin123', 12)
     
@@ -38,6 +48,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    console.log('Admin user created successfully:', adminUser.id)
     return NextResponse.json({
       success: true,
       message: 'Admin user created successfully',
@@ -54,10 +65,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Failed to setup admin user',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        environment: process.env.NODE_ENV,
+        hasDatabaseUrl: !!process.env.DATABASE_URL
       },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
