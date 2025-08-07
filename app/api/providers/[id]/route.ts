@@ -4,10 +4,10 @@ import { prisma } from '@/lib/db'
 // GET /api/providers/[id] - Get a single provider
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
 
     // Try to find provider by ID first, then by slug
     let provider = await prisma.provider.findUnique({
@@ -124,10 +124,10 @@ export async function GET(
 // DELETE /api/providers/[id] - Delete a provider
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
 
     // Check if provider exists
     const existingProvider = await prisma.provider.findUnique({
@@ -179,10 +179,10 @@ export async function DELETE(
 // PATCH /api/providers/[id] - Update a provider
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
 
     // Check if provider exists

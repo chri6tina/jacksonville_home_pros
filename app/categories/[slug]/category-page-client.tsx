@@ -17,6 +17,7 @@ import { ProviderCard } from '@/components/providers/provider-card'
 interface Provider {
   id: string
   businessName: string
+  slug: string
   description: string
   rating: number
   reviewCount: number

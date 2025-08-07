@@ -5,8 +5,9 @@ import crypto from 'crypto'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     // Check authentication and admin role
     const session = await getServerSession()
@@ -14,11 +15,16 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
-
-    // Get provider
+    // Get provider with user email
     const provider = await prisma.provider.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        user: {
+          select: {
+            email: true
+          }
+        }
+      }
     })
 
     if (!provider) {
@@ -53,13 +59,13 @@ export async function POST(
 
     // Create a claim invitation record
     await prisma.claimInvitation.create({
-      data: {
-        providerId: provider.id,
-        email: provider.email,
-        token: claimToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-        sentBy: session.user.id
-      }
+              data: {
+          providerId: provider.id,
+          email: provider.user?.email || '',
+          token: claimToken,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+          sentBy: session.user.id
+        }
     })
 
     return NextResponse.json({

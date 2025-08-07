@@ -83,6 +83,7 @@ const featuredProviders = [
   {
     id: 'cme0o8s03000412ec496eczc0',
     businessName: 'Metro Rooter',
+    slug: 'metro-rooter',
     description: 'Metro-Rooter is a trusted plumbing and septic service company based in Jacksonville, Florida, serving the area since 1978. Backed by Wind River Environmental, they offer 24/7 emergency services and handle everything from residential plumbing repairs and water heater installations to commercial septic pumping, trenchless pipelining, and grease trap cleaning.',
     rating: 4.7,
     reviewCount: 875,

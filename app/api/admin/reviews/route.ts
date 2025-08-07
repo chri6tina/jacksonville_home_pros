@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
             slug: true
           }
         },
-        reply: {
+        replies: {
           select: {
             id: true,
             content: true,

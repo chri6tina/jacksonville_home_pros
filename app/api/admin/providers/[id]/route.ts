@@ -4,10 +4,10 @@ import { prisma } from '@/lib/db'
 // PATCH - Update provider (including positioning and status)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     
     // Only allow specific fields to be updated

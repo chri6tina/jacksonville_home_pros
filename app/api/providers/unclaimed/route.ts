@@ -20,29 +20,24 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Search for unclaimed providers
+    // Since userId is required, we'll look for providers that might be "unclaimed" 
+    // by checking if they have a specific pattern or flag
+    // For now, we'll return all providers that match the search
     const providers = await prisma.provider.findMany({
       where: {
-        userId: null, // Only unclaimed providers
         OR: [
           { businessName: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
           { phone: { contains: search, mode: 'insensitive' } },
           { address: { contains: search, mode: 'insensitive' } },
           { city: { contains: search, mode: 'insensitive' } }
         ]
       },
-      select: {
-        id: true,
-        businessName: true,
-        email: true,
-        phone: true,
-        city: true,
-        state: true,
-        description: true,
-        verified: true,
-        premium: true,
-        featured: true
+      include: {
+        user: {
+          select: {
+            email: true
+          }
+        }
       },
       take: 10, // Limit results
       orderBy: {
@@ -50,9 +45,22 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // Filter out providers that already have users (claimed)
+    const unclaimedProviders = providers.filter(provider => !provider.user)
+
     return NextResponse.json({
-      providers,
-      count: providers.length
+      providers: unclaimedProviders.map(provider => ({
+        id: provider.id,
+        businessName: provider.businessName,
+        phone: provider.phone,
+        city: provider.city,
+        state: provider.state,
+        description: provider.description,
+        verified: provider.verified,
+        premium: provider.premium,
+        featured: provider.featured
+      })),
+      count: unclaimedProviders.length
     })
 
   } catch (error) {

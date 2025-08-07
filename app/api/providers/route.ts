@@ -156,11 +156,19 @@ export async function POST(request: NextRequest) {
         throw new Error('Provider already exists for this user')
       }
 
+      // Generate slug from business name
+      const slug = body.businessName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+        + '-' + Math.random().toString(36).substring(2, 8)
+
       // Step 3: Create provider
       const provider = await tx.provider.create({
         data: {
           userId: user.id,
           businessName: body.businessName,
+          slug: slug,
           description: body.description || '',
           phone: body.phone,
           website: body.website || null,

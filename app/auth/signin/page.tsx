@@ -29,13 +29,9 @@ export default function SignInPage() {
       if (result?.error) {
         setError('Invalid email or password')
       } else {
-            // Redirect based on user role
-    console.log('Sign in successful, redirecting based on role...')
-    if (result.user?.role === 'ADMIN') {
-      router.push('/admin')
-    } else {
-      router.push('/dashboard')
-    }
+        // Redirect to dashboard - role-based redirect will be handled by middleware
+        console.log('Sign in successful, redirecting...')
+        router.push('/dashboard')
       }
     } catch (error) {
       setError('An error occurred. Please try again.')

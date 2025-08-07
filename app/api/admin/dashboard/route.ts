@@ -72,6 +72,15 @@ export async function GET(request: NextRequest) {
             select: {
               rating: true
             }
+          },
+          services: {
+            include: {
+              category: {
+                select: {
+                  name: true
+                }
+              }
+            }
           }
         }
       }),
@@ -79,16 +88,15 @@ export async function GET(request: NextRequest) {
       // Category statistics
       prisma.category.findMany({
         include: {
-          _count: {
-            select: {
-              providers: true
-            }
-          },
-          providers: {
+          services: {
             include: {
-              reviews: {
-                select: {
-                  rating: true
+              provider: {
+                include: {
+                  reviews: {
+                    select: {
+                      rating: true
+                    }
+                  }
                 }
               }
             }
@@ -106,10 +114,15 @@ export async function GET(request: NextRequest) {
         ? provider.reviews.reduce((sum, review) => sum + review.rating, 0) / provider.reviews.length
         : 0
 
+      // Get the first category from services
+      const primaryCategory = provider.services.length > 0 
+        ? provider.services[0].category.name 
+        : 'Uncategorized'
+
       return {
         id: provider.id,
         businessName: provider.businessName,
-        category: provider.category?.name || 'Uncategorized',
+        category: primaryCategory,
         status: provider.reviews.length > 0 ? 'active' : 'pending',
         rating: Math.round(avgProviderRating * 10) / 10,
         reviewCount: provider.reviews.length,
@@ -119,7 +132,12 @@ export async function GET(request: NextRequest) {
 
     // Process category statistics
     const processedCategoryStats = categoryStats.map(category => {
-      const allRatings = category.providers.flatMap(provider => 
+      const providers = category.services.map(service => service.provider)
+      const uniqueProviders = providers.filter((provider, index, self) => 
+        index === self.findIndex(p => p.id === provider.id)
+      )
+      
+      const allRatings = uniqueProviders.flatMap(provider => 
         provider.reviews.map(review => review.rating)
       )
       
@@ -129,7 +147,7 @@ export async function GET(request: NextRequest) {
 
       return {
         name: category.name,
-        providerCount: category._count.providers,
+        providerCount: uniqueProviders.length,
         avgRating: Math.round(avgCategoryRating * 10) / 10
       }
     }).sort((a, b) => b.providerCount - a.providerCount)

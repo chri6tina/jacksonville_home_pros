@@ -5,10 +5,10 @@ import crypto from 'crypto'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const { searchParams } = new URL(request.url)
     const claimToken = searchParams.get('token')
 
@@ -47,7 +47,7 @@ export async function GET(
         provider: {
           id: provider.id,
           businessName: provider.businessName,
-          email: provider.email,
+          email: provider.user?.email || '',
           phone: provider.phone,
           address: provider.address,
           city: provider.city,
@@ -74,7 +74,7 @@ export async function GET(
       provider: {
         id: provider.id,
         businessName: provider.businessName,
-        email: provider.email,
+        email: provider.user?.email || '',
         phone: provider.phone,
         address: provider.address,
         city: provider.city,
@@ -99,10 +99,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     const { userId, claimToken } = body
 
@@ -155,7 +155,7 @@ export async function POST(
       }
     } else {
       // Email-based verification
-      if (session.user.email !== provider.email) {
+      if (session.user.email !== provider.user?.email) {
         return NextResponse.json(
           { error: 'Email address does not match the business email' },
           { status: 400 }
@@ -173,8 +173,7 @@ export async function POST(
     const updatedProvider = await prisma.provider.update({
       where: { id },
       data: {
-        userId: userId,
-        claimedAt: new Date()
+        userId: userId
       },
       include: {
         user: {

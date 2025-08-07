@@ -27,8 +27,8 @@ model User {
   provider      Provider?
   
   // Claiming and notifications
-  claimInvitations ClaimInvitation[]
-  notifications    Notification[]
+  claimInvitations ClaimInvitation[] @relation("UserClaimInvitations")
+  notifications    Notification[] @relation("Notifications")
 
   // Homeowner-specific fields
   bookings      Booking[]
@@ -40,9 +40,8 @@ model User {
   accounts      Account[]
   sessions      Session[]
   
-  // Notifications and claiming
-  notifications Notification[]
-  claimInvitationsSent ClaimInvitation[]
+  // Claim invitations sent by admin
+  claimInvitationsSent ClaimInvitation[] @relation("ClaimInvitationsSent")
 
   @@map("users")
 }
@@ -136,7 +135,8 @@ model Provider {
   quoteRequests     QuoteRequest[]
   quoteResponses    QuoteResponse[]
   favorites         Favorite[]
-  payments          Payment[]
+  claimInvitations  ClaimInvitation[]
+  notifications     Notification[]
 
   @@map("providers")
 }
@@ -267,6 +267,7 @@ model Review {
   timeliness Int?     // 1-5 rating for timeliness
   value      Int?     // 1-5 rating for value
   verified   Boolean  @default(false)
+  status     ReviewStatus @default(PENDING)
   source     ReviewSource @default(ONSITE)
   externalId String?  // For external platform reviews
   createdAt  DateTime @default(now())
@@ -279,6 +280,12 @@ model Review {
   replies    ReviewReply[]
 
   @@map("reviews")
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum ReviewSource {
@@ -339,7 +346,6 @@ model Booking {
   provider    Provider      @relation(fields: [providerId], references: [id], onDelete: Cascade)
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   service     ProviderService? @relation(fields: [serviceId], references: [id])
-  payments    Payment[]
 
   @@map("bookings")
 }
@@ -419,41 +425,7 @@ model Favorite {
 }
 
 // Payment tracking
-model Payment {
-  id          String        @id @default(cuid())
-  providerId  String
-  bookingId   String?
-  amount      Float
-  currency    String        @default("USD")
-  status      PaymentStatus @default(PENDING)
-  type        PaymentType
-  stripeId    String?
-  description String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
 
-  // Relations
-  provider    Provider      @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  booking     Booking?      @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-
-  @@map("payments")
-}
-
-enum PaymentStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-  REFUNDED
-  CANCELLED
-}
-
-enum PaymentType {
-  DEPOSIT
-  FULL_PAYMENT
-  SUBSCRIPTION
-  FEATURED_LISTING
-}
 
 // Jacksonville neighborhoods and locations
 model Location {
@@ -497,12 +469,14 @@ model ClaimInvitation {
   token      String   @unique
   expiresAt  DateTime
   sentBy     String
+  userId     String?
   used       Boolean  @default(false)
   createdAt  DateTime @default(now())
 
   // Relations
   provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
   sentByUser User     @relation("ClaimInvitationsSent", fields: [sentBy], references: [id], onDelete: Cascade)
+  user       User?    @relation("UserClaimInvitations", fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("claim_invitations")
 }

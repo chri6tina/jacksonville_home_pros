@@ -21,10 +21,11 @@ export async function generateStaticParams() {
 }
 
 // Generate metadata for each category
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   try {
+    const { slug } = await params
     const category = await prisma.category.findUnique({
-      where: { slug: params.slug },
+      where: { slug },
       include: { children: true }
     })
 
@@ -98,14 +99,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 // Server component that fetches data
-export default async function CategoryPage({ params, searchParams }: { 
-  params: { slug: string }
-  searchParams: { success?: string }
+export default async function CategoryPage({ params }: { 
+  params: Promise<{ slug: string }>
 }) {
   try {
     // Fetch category data
+    const { slug } = await params
     const category = await prisma.category.findUnique({
-      where: { slug: params.slug },
+      where: { slug },
       include: { children: true }
     })
 
@@ -126,7 +127,6 @@ export default async function CategoryPage({ params, searchParams }: {
     return (
       <CategoryPageClient 
         category={categoryData}
-        successMessage={searchParams.success}
       />
     )
   } catch (error) {
