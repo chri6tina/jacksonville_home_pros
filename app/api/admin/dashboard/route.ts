@@ -10,6 +10,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Test database connection first
+    try {
+      await prisma.$connect()
+    } catch (dbError) {
+      console.error('Database connection failed:', dbError)
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 503 }
+      )
+    }
+
     // Get dashboard statistics
     const [
       totalProviders,
@@ -171,5 +182,7 @@ export async function GET(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 } 
