@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import AdminLayout from '@/components/layout/admin-layout'
+import SimpleAuth from './simple-auth'
 import { 
   BuildingOfficeIcon,
   WrenchScrewdriverIcon,
@@ -76,7 +77,8 @@ export default function AdminDashboard() {
     }
   }
   return (
-    <AdminLayout title="Dashboard" subtitle="Overview of your platform">
+    <SimpleAuth>
+      <AdminLayout title="Dashboard" subtitle="Overview of your platform">
       {/* Quick Actions */}
       <div className="mb-8">
         <div className="flex flex-wrap gap-4">
@@ -259,6 +261,7 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
-    </AdminLayout>
+      </AdminLayout>
+    </SimpleAuth>
   )
 } 
