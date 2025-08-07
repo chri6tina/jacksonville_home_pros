@@ -26,11 +26,8 @@ interface DashboardStats {
 interface RecentProvider {
   id: string
   businessName: string
-  category: string
-  status: 'active' | 'pending'
-  rating: number
-  reviewCount: number
-  lastUpdated: string
+  email: string
+  createdAt: string
 }
 
 interface CategoryStat {
@@ -54,10 +51,23 @@ export default function AdminDashboard() {
       setLoading(true)
       const response = await fetch('/api/admin/dashboard')
       if (response.ok) {
-        const data = await response.json()
-        setStats(data.stats)
-        setRecentProviders(data.recentProviders)
-        setCategoryStats(data.categoryStats)
+        const result = await response.json()
+        console.log('Dashboard API response:', result)
+        
+        if (result.status === 'success' && result.data) {
+          setStats({
+            totalProviders: result.data.stats.totalProviders,
+            activeProviders: result.data.stats.totalProviders, // Using total as active for now
+            pendingProviders: 0, // Not provided by API
+            totalCategories: result.data.stats.totalCategories,
+            totalReviews: result.data.stats.totalReviews,
+            averageRating: 0 // Not provided by API
+          })
+          setRecentProviders(result.data.recentProviders || [])
+          setCategoryStats([]) // API doesn't provide category stats yet
+        }
+      } else {
+        console.error('Dashboard API error:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -173,20 +183,16 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <div className="space-y-4">
-              {recentProviders.length > 0 ? (
+              {recentProviders && recentProviders.length > 0 ? (
                 recentProviders.map((provider) => (
                   <div key={provider.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div>
                       <h4 className="font-medium text-gray-900">{provider.businessName}</h4>
-                      <p className="text-sm text-gray-600">{provider.category}</p>
+                      <p className="text-sm text-gray-600">{provider.email}</p>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        provider.status === 'active' 
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {provider.status === 'active' ? 'Active' : 'Pending'}
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Active
                       </span>
                       <Link
                         href={`/admin/providers/${provider.id}/edit`}
@@ -231,7 +237,7 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <div className="space-y-4">
-              {categoryStats.length > 0 ? (
+              {categoryStats && categoryStats.length > 0 ? (
                 categoryStats.slice(0, 6).map((category) => (
                   <div key={category.name} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div>
@@ -246,7 +252,7 @@ export default function AdminDashboard() {
                 ))
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  <p>No categories found</p>
+                  <p>No category data available</p>
                 </div>
               )}
             </div>
