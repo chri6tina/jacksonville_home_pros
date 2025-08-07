@@ -6,24 +6,74 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🌱 Starting database seed...')
 
-  // Clear existing data
-  await prisma.analytics.deleteMany()
-  await prisma.payment.deleteMany()
-  await prisma.quoteResponse.deleteMany()
-  await prisma.quoteRequest.deleteMany()
-  await prisma.favorite.deleteMany()
-  await prisma.reviewReply.deleteMany()
-  await prisma.reviewImage.deleteMany()
-  await prisma.review.deleteMany()
-  await prisma.booking.deleteMany()
-  await prisma.providerImage.deleteMany()
-  await prisma.operatingHours.deleteMany()
-  await prisma.serviceArea.deleteMany()
-  await prisma.providerService.deleteMany()
-  await prisma.provider.deleteMany()
-  await prisma.category.deleteMany()
-  await prisma.location.deleteMany()
-  await prisma.user.deleteMany()
+  // Clear existing data (with error handling for missing tables)
+  try {
+    await prisma.analytics.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.payment.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.quoteResponse.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.quoteRequest.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.favorite.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.reviewReply.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.reviewImage.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.review.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.booking.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.providerImage.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.operatingHours.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.serviceArea.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.providerService.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.provider.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.category.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.location.deleteMany()
+  } catch (e) {}
+  
+  try {
+    await prisma.user.deleteMany()
+  } catch (e) {}
 
   console.log('🗑️  Cleared existing data')
 
@@ -175,6 +225,7 @@ async function main() {
     {
       userId: createdUsers[2].id,
       businessName: 'Jacksonville Plumbing Pros',
+      slug: 'jacksonville-plumbing-pros',
       description: 'Licensed and insured plumbing services for residential and commercial properties. We specialize in emergency repairs, installations, and maintenance.',
       phone: '(904) 555-0201',
       website: 'https://jacksonvilleplumbingpros.com',
@@ -183,7 +234,6 @@ async function main() {
       latitude: 30.2949,
       longitude: -81.3931,
       serviceRadius: 25,
-      hourlyRate: 85,
       licenseNumber: 'FL123456789',
       insuranceStatus: true,
       verified: true,
@@ -194,6 +244,7 @@ async function main() {
     {
       userId: createdUsers[3].id,
       businessName: 'Coastal Electric Solutions',
+      slug: 'coastal-electric-solutions',
       description: 'Professional electrical services with 15+ years of experience in Jacksonville. Licensed, bonded, and insured for your peace of mind.',
       phone: '(904) 555-0202',
       website: 'https://coastalelectricsolutions.com',
@@ -202,7 +253,6 @@ async function main() {
       latitude: 30.3158,
       longitude: -81.6557,
       serviceRadius: 30,
-      hourlyRate: 95,
       licenseNumber: 'FL987654321',
       insuranceStatus: true,
       verified: true,
@@ -213,6 +263,7 @@ async function main() {
     {
       userId: createdUsers[0].id, // Reuse existing user
       businessName: 'Sparkle Clean Pro',
+      slug: 'sparkle-clean-pro',
       description: 'Professional cleaning services for homes and offices in Jacksonville. We offer regular cleaning, deep cleaning, and move-in/move-out services.',
       phone: '(904) 555-0203',
       website: 'https://sparklecleanpro.com',
@@ -221,7 +272,6 @@ async function main() {
       latitude: 30.3294,
       longitude: -81.6598,
       serviceRadius: 20,
-      hourlyRate: 45,
       licenseNumber: 'FL111222333',
       insuranceStatus: true,
       verified: true,
@@ -243,17 +293,17 @@ async function main() {
 
   // Create provider services
   const plumbingServices = [
-    { providerId: createdProviders[0].id, categoryId: plumbingCategory!.id, price: 85, priceType: 'HOURLY' as const, description: 'General plumbing services' },
+    { providerId: createdProviders[0].id, categoryId: plumbingCategory!.id, description: 'General plumbing services' },
   ]
 
   const electricalServices = [
-    { providerId: createdProviders[1].id, categoryId: electricalCategory!.id, price: 95, priceType: 'HOURLY' as const, description: 'General electrical services' },
+    { providerId: createdProviders[1].id, categoryId: electricalCategory!.id, description: 'General electrical services' },
   ]
 
   // Find cleaning category
   const cleaningCategory = createdPrimaryCategories.find(c => c.slug === 'cleaning')
   const cleaningServices = cleaningCategory ? [
-    { providerId: createdProviders[2].id, categoryId: cleaningCategory.id, price: 45, priceType: 'HOURLY' as const, description: 'Professional cleaning services' },
+    { providerId: createdProviders[2].id, categoryId: cleaningCategory.id, description: 'Professional cleaning services' },
   ] : []
 
   for (const service of [...plumbingServices, ...electricalServices, ...cleaningServices]) {

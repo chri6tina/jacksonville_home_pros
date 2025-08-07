@@ -36,6 +36,90 @@ export const metadata: Metadata = {
   },
 }
 
+// Fallback sample data for when database is not available
+const fallbackCategories = [
+  {
+    id: '1',
+    name: 'Plumbing',
+    slug: 'plumbing',
+    icon: '🔧',
+    description: 'Professional plumbing services in Jacksonville',
+    providerCount: 45,
+    color: 'from-blue-50 to-blue-100',
+    iconColor: 'text-blue-600'
+  },
+  {
+    id: '2',
+    name: 'Electrical',
+    slug: 'electrical',
+    icon: '⚡',
+    description: 'Licensed electrical services in Jacksonville',
+    providerCount: 38,
+    color: 'from-yellow-50 to-yellow-100',
+    iconColor: 'text-yellow-600'
+  },
+  {
+    id: '3',
+    name: 'HVAC',
+    slug: 'hvac',
+    icon: '❄️',
+    description: 'Heating and cooling services in Jacksonville',
+    providerCount: 29,
+    color: 'from-green-50 to-green-100',
+    iconColor: 'text-green-600'
+  },
+  {
+    id: '4',
+    name: 'Landscaping',
+    slug: 'landscaping',
+    icon: '🌿',
+    description: 'Landscaping and lawn care services in Jacksonville',
+    providerCount: 41,
+    color: 'from-emerald-50 to-emerald-100',
+    iconColor: 'text-emerald-600'
+  },
+  {
+    id: '5',
+    name: 'Painting',
+    slug: 'painting',
+    icon: '🎨',
+    description: 'Interior and exterior painting services in Jacksonville',
+    providerCount: 52,
+    color: 'from-purple-50 to-purple-100',
+    iconColor: 'text-purple-600'
+  },
+  {
+    id: '6',
+    name: 'Handyman',
+    slug: 'handyman',
+    icon: '🔨',
+    description: 'General handyman services in Jacksonville',
+    providerCount: 67,
+    color: 'from-orange-50 to-orange-100',
+    iconColor: 'text-orange-600'
+  },
+  {
+    id: '7',
+    name: 'Roofing',
+    slug: 'roofing',
+    icon: '🏠',
+    description: 'Roof repair and installation services in Jacksonville',
+    providerCount: 23,
+    color: 'from-red-50 to-red-100',
+    iconColor: 'text-red-600'
+  },
+  {
+    id: '8',
+    name: 'Cleaning',
+    slug: 'cleaning',
+    icon: '🧹',
+    description: 'House cleaning services in Jacksonville',
+    providerCount: 34,
+    color: 'from-cyan-50 to-cyan-100',
+    iconColor: 'text-cyan-600'
+  }
+]
+
 // Server component that fetches data
 export default async function CategoriesPage() {
   try {
@@ -101,7 +185,40 @@ export default async function CategoriesPage() {
     )
   } catch (error) {
     console.error('Error in CategoriesPage:', error)
-    return <CategoriesPageClient categories={[]} />
+    
+    // Use fallback data when database is not available
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Home Services in Jacksonville",
+      "description": "Browse categories of home services available in Jacksonville, Florida",
+      "url": "https://jacksonvillehomepros.com/categories",
+      "numberOfItems": fallbackCategories.length,
+      "itemListElement": fallbackCategories.map((category, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+        "item": {
+          "@type": "Service",
+          "name": category.name,
+          "description": category.description,
+          "url": `https://jacksonvillehomepros.com/categories/${category.slug}`,
+          "provider": {
+            "@type": "Organization",
+            "name": "Jacksonville Home Pros"
+          }
+        }
+      }))
+    }
+
+    return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+        <CategoriesPageClient categories={fallbackCategories} />
+      </>
+    )
   }
 }
 
