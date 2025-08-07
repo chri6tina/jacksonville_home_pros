@@ -50,6 +50,30 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
+      
+      // Check if using basic auth (skip database calls)
+      const hasBasicAuth = document.cookie.includes('admin-auth=true')
+      
+      if (hasBasicAuth) {
+        // Use mock data for basic auth mode
+        console.log('Using basic auth mode - loading mock data')
+        setStats({
+          totalProviders: 5,
+          activeProviders: 5,
+          pendingProviders: 0,
+          totalCategories: 8,
+          totalReviews: 12,
+          averageRating: 4.5
+        })
+        setRecentProviders([
+          { id: '1', businessName: 'Sample Provider 1', email: 'provider1@example.com', createdAt: new Date().toISOString() },
+          { id: '2', businessName: 'Sample Provider 2', email: 'provider2@example.com', createdAt: new Date().toISOString() }
+        ])
+        setCategoryStats([])
+        return
+      }
+      
+      // Try database call for JWT auth
       const response = await fetch('/api/admin/dashboard')
       if (response.ok) {
         const result = await response.json()
@@ -69,9 +93,27 @@ export default function AdminDashboard() {
         }
       } else {
         console.error('Dashboard API error:', response.status, response.statusText)
+        // Fall back to mock data if API fails
+        setStats({
+          totalProviders: 0,
+          activeProviders: 0,
+          pendingProviders: 0,
+          totalCategories: 0,
+          totalReviews: 0,
+          averageRating: 0
+        })
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
+      // Fall back to mock data on error
+      setStats({
+        totalProviders: 0,
+        activeProviders: 0,
+        pendingProviders: 0,
+        totalCategories: 0,
+        totalReviews: 0,
+        averageRating: 0
+      })
     } finally {
       setLoading(false)
     }
