@@ -55,7 +55,7 @@ export default function ReviewsPage() {
     }
   }, [])
 
-  const updateReviewStatus = (id: string, status: 'approved' | 'rejected') => {
+  const updateReviewStatus = (id: string, status: 'pending' | 'approved' | 'rejected') => {
     setReviews(reviews.map(review => 
       review.id === id 
         ? { ...review, status }
