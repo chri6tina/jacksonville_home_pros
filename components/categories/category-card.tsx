@@ -1,21 +1,49 @@
 'use client'
 
 import Link from 'next/link'
-import { ComponentType } from 'react'
+import { 
+  WrenchIcon,
+  BoltIcon,
+  PaintBrushIcon,
+  SparklesIcon,
+  SunIcon,
+  WrenchScrewdriverIcon,
+  HomeIcon,
+  TruckIcon,
+  HeartIcon,
+  ShieldCheckIcon
+} from '@heroicons/react/24/outline'
 
 interface CategoryCardProps {
   category: {
     id: string
     name: string
     slug: string
-    icon: ComponentType<{ className?: string }>
+    icon: string
     description: string
     providerCount: number
   }
 }
 
 export function CategoryCard({ category }: CategoryCardProps) {
-  const IconComponent = category.icon
+  // Icon mapping for categories
+  const getCategoryIcon = (icon: string) => {
+    const iconMap: { [key: string]: any } = {
+      '🔧': WrenchIcon,
+      '⚡': BoltIcon,
+      '🎨': PaintBrushIcon,
+      '🌿': SparklesIcon,
+      '❄️': SunIcon,
+      '🔧': WrenchScrewdriverIcon,
+      '🏠': HomeIcon,
+      '📦': TruckIcon,
+      '👴': HeartIcon,
+      '🐜': ShieldCheckIcon,
+    }
+    return iconMap[icon] || WrenchIcon
+  }
+
+  const IconComponent = getCategoryIcon(category.icon)
 
   return (
     <Link href={`/categories/${category.slug}`} className="group">

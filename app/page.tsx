@@ -26,128 +26,129 @@ import { SearchBar } from '@/components/search/search-bar'
 import { CategoryCard } from '@/components/categories/category-card'
 import { ProviderCard } from '@/components/providers/provider-card'
 import { TestimonialCard } from '@/components/testimonials/testimonial-card'
+import { useEffect, useState } from 'react'
 
-// Sample data - in production this would come from the database
-const featuredCategories = [
-  {
-    id: '1',
-    name: 'Plumbing',
-    slug: 'plumbing',
-    icon: WrenchIcon,
-    description: 'Faucet repair, drain cleaning, toilet installation',
-    providerCount: 45,
-  },
-  {
-    id: '2',
-    name: 'Electrical',
-    slug: 'electrical',
-    icon: BoltIcon,
-    description: 'Wiring, lighting, outlet installation',
-    providerCount: 38,
-  },
-  {
-    id: '3',
-    name: 'Painting',
-    slug: 'painting',
-    icon: PaintBrushIcon,
-    description: 'Interior, exterior, cabinet painting',
-    providerCount: 52,
-  },
-  {
-    id: '4',
-    name: 'Landscaping',
-    slug: 'landscaping',
-    icon: SparklesIcon,
-    description: 'Lawn care, tree trimming, garden design',
-    providerCount: 41,
-  },
-  {
-    id: '5',
-    name: 'HVAC',
-    slug: 'hvac',
-    icon: SunIcon,
-    description: 'Heating, cooling, air conditioning',
-    providerCount: 29,
-  },
-  {
-    id: '6',
-    name: 'Handyman',
-    slug: 'handyman',
-    icon: WrenchScrewdriverIcon,
-    description: 'General repairs and maintenance',
-    providerCount: 67,
-  },
-]
+interface Category {
+  id: string
+  name: string
+  slug: string
+  description: string
+  icon: string
+  providerCount: number
+}
 
-const featuredProviders = [
-  {
-    id: 'cme0o8s03000412ec496eczc0',
-    businessName: 'Metro Rooter',
-    slug: 'metro-rooter',
-    description: 'Metro-Rooter is a trusted plumbing and septic service company based in Jacksonville, Florida, serving the area since 1978. Backed by Wind River Environmental, they offer 24/7 emergency services and handle everything from residential plumbing repairs and water heater installations to commercial septic pumping, trenchless pipelining, and grease trap cleaning.',
-    rating: 4.7,
-    reviewCount: 875,
-    location: 'Jacksonville, FL',
-    services: [
-      { id: 'cme0o8s2v000612ecfsu6z2c7', categoryId: 'cme0hvl7u000coact6iahl1r4', categoryName: 'Plumbing', categorySlug: 'plumbing' }
-    ],
-    verified: false,
-    premium: false,
-    featured: false,
-    image: '/api/google-places/photo?photoreference=ATKogpeZ08RnBJJD6Awe2H1cs-X8SQ5OkRgQxgiUqIEg_fXnzmOu8B97zUOemXTXj0eNCQsbsaIhOR4ecogwLs9XhtBeszGAV_ENYN54E5P7KxPVYKqmhL4TdJrjDdonwlzr-Y8F54naGdaK1RbIcWQosMa7wZNNBjeX_fkr7iq0SDbH2ILmbf_rw57MvkSk0ZwAXnL10jD9qwJv-pvazrMWl0CmJKGF6x8a90NuvHnkcNJpPo-jPvLE72-qc3r10cbGZ1MTmTnXgYgrLq_xICzaVuAijyjXQAUyOCWnPDfitgfA6w&maxwidth=400',
-    images: [
-      { id: 'cme0o8s5l000812ec28mgswcw', url: '/api/google-places/photo?photoreference=ATKogpeZ08RnBJJD6Awe2H1cs-X8SQ5OkRgQxgiUqIEg_fXnzmOu8B97zUOemXTXj0eNCQsbsaIhOR4ecogwLs9XhtBeszGAV_ENYN54E5P7KxPVYKqmhL4TdJrjDdonwlzr-Y8F54naGdaK1RbIcWQosMa7wZNNBjeX_fkr7iq0SDbH2ILmbf_rw57MvkSk0ZwAXnL10jD9qwJv-pvazrMWl0CmJKGF6x8a90NuvHnkcNJpPo-jPvLE72-qc3r10cbGZ1MTmTnXgYgrLq_xICzaVuAijyjXQAUyOCWnPDfitgfA6w&maxwidth=400', alt: 'Metro Rooter - Business Photo', type: 'PROFILE' }
-    ],
-    googleRating: 4.7,
-    googleReviewCount: 875,
-    googlePlacesId: 'ChIJfZHBcEK_5YgRk6vs4zAhMS8',
-    phone: '(904) 567-3775',
-    email: 'support@metro.com',
-    website: 'https://www.metrorooter.com/',
-    address: '8892 Normandy Blvd, Jacksonville, FL 32221, USA',
-    city: 'Jacksonville',
-    state: 'FL'
-  }
-]
+interface Provider {
+  id: string
+  businessName: string
+  slug: string
+  description: string
+  rating: number
+  reviewCount: number
+  location: string
+  services: Array<{
+    id: string
+    categoryId: string
+    categoryName: string
+    categorySlug: string
+  }>
+  verified: boolean
+  premium: boolean
+  featured: boolean
+  image: string
+  images: Array<{
+    id: string
+    url: string
+    alt: string
+    type: string
+  }>
+  googleRating: number
+  googleReviewCount: number
+  googlePlacesId: string
+  phone: string
+  email: string
+  website: string
+  address: string
+  city: string
+  state: string
+}
 
-const testimonials = [
-  {
-    id: '1',
-    name: 'Sarah M.',
-    location: 'Jacksonville Beach',
-    rating: 5,
-    content: 'Coastal Electric upgraded our electrical panel quickly and professionally. The team was punctual, clean, and explained everything clearly. Highly recommend!',
-    service: 'Electrical',
-    image: '/images/testimonials/sarah.jpg',
-  },
-  {
-    id: '2',
-    name: 'David K.',
-    location: 'San Marco',
-    rating: 5,
-    content: 'Sunshine Painting transformed our living room! The color consultation was spot on and the finish is perfect. They were professional and cleaned up thoroughly.',
-    service: 'Painting',
-    image: '/images/testimonials/david.jpg',
-  },
-  {
-    id: '3',
-    name: 'Robert J.',
-    location: 'Riverside',
-    rating: 5,
-    content: 'Plumbing Pros saved us from a major disaster at 2 AM! Fast, professional, and reasonably priced. Their 24/7 service is a lifesaver.',
-    service: 'Plumbing',
-    image: '/images/testimonials/robert.jpg',
-  },
-]
+interface Testimonial {
+  id: string
+  name: string
+  location: string
+  rating: number
+  content: string
+  service: string
+  image: string
+}
 
-const stats = [
-  { label: 'Service Providers', value: '500+' },
-  { label: 'Happy Customers', value: '10,000+' },
-  { label: 'Services Completed', value: '25,000+' },
-  { label: 'Average Rating', value: '4.8' },
-]
+interface Stats {
+  label: string
+  value: string
+}
 
 export default function HomePage() {
+  const [featuredCategories, setFeaturedCategories] = useState<Category[]>([])
+  const [featuredProviders, setFeaturedProviders] = useState<Provider[]>([])
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
+  const [stats, setStats] = useState<Stats[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchHomeData = async () => {
+      try {
+        // Fetch categories
+        const categoriesResponse = await fetch('/api/categories?featured=true&limit=6')
+        const categoriesData = await categoriesResponse.json()
+        
+        // Fetch featured providers
+        const providersResponse = await fetch('/api/providers?featured=true&limit=3')
+        const providersData = await providersResponse.json()
+        
+        // Fetch testimonials (reviews)
+        const testimonialsResponse = await fetch('/api/reviews?featured=true&limit=3')
+        const testimonialsData = await testimonialsResponse.json()
+        
+        // Fetch stats
+        const statsResponse = await fetch('/api/stats')
+        const statsData = await statsResponse.json()
+
+        setFeaturedCategories(categoriesData.categories || [])
+        setFeaturedProviders(providersData.providers || [])
+        setTestimonials(testimonialsData.reviews || [])
+        setStats(statsData.stats || [])
+      } catch (error) {
+        console.error('Error fetching home data:', error)
+        // Set empty arrays if fetch fails
+        setFeaturedCategories([])
+        setFeaturedProviders([])
+        setTestimonials([])
+        setStats([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchHomeData()
+  }, [])
+
+
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <Header />

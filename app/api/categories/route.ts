@@ -4,50 +4,60 @@ import { prisma } from '@/lib/db'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const includeInactive = searchParams.get('includeInactive') === 'true'
+    const featured = searchParams.get('featured') === 'true'
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const level = searchParams.get('level') || 'PRIMARY'
 
-    // Fetch all categories with their hierarchy
+    let whereClause: any = {
+      active: true,
+      level: level as any
+    }
+
+    if (featured) {
+      whereClause.sortOrder = { lte: 6 } // First 6 categories
+    }
+
     const categories = await prisma.category.findMany({
-      where: {
-        active: includeInactive ? undefined : true
-      },
-      include: {
-        children: {
-          where: {
-            active: includeInactive ? undefined : true
-          },
-          include: {
-            children: {
-              where: {
-                active: includeInactive ? undefined : true
-              },
-              orderBy: {
-                sortOrder: 'asc'
-              }
-            }
-          },
-          orderBy: {
-            sortOrder: 'asc'
-          }
-        }
-      },
+      where: whereClause,
       orderBy: {
         sortOrder: 'asc'
+      },
+      take: limit,
+      include: {
+        services: {
+          include: {
+            provider: true
+          }
+        }
       }
     })
 
-    // Filter to only primary categories (those without parents)
-    const primaryCategories = categories.filter(category => !category.parentId)
+    // Calculate provider count for each category
+    const categoriesWithProviderCount = categories.map(category => {
+      const uniqueProviders = new Set(
+        category.services.map(service => service.provider.id)
+      )
+      
+      return {
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        description: category.description,
+        icon: category.icon,
+        level: category.level,
+        sortOrder: category.sortOrder,
+        providerCount: uniqueProviders.size
+      }
+    })
 
     return NextResponse.json({
-      status: 'success',
-      categories: primaryCategories
+      categories: categoriesWithProviderCount
     })
 
   } catch (error) {
     console.error('Error fetching categories:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch categories' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

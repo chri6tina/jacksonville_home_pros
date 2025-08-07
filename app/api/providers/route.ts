@@ -1,20 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
-// GET /api/providers - Get all providers
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const category = searchParams.get('category')
-    const query = searchParams.get('q')
+    const featured = searchParams.get('featured') === 'true'
     const limit = parseInt(searchParams.get('limit') || '50')
-    const offset = parseInt(searchParams.get('offset') || '0')
+    const category = searchParams.get('category')
+    const verified = searchParams.get('verified') === 'true'
 
     let whereClause: any = {
       active: true
     }
 
-    // Filter by category if specified
+    if (featured) {
+      whereClause.featured = true
+    }
+
+    if (verified) {
+      whereClause.verified = true
+    }
+
     if (category) {
       whereClause.services = {
         some: {
@@ -25,21 +31,23 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Filter by search query if specified
-    if (query) {
-      whereClause.OR = [
-        { businessName: { contains: query, mode: 'insensitive' } },
-        { description: { contains: query, mode: 'insensitive' } },
-        { city: { contains: query, mode: 'insensitive' } }
-      ]
-    }
-
     const providers = await prisma.provider.findMany({
       where: whereClause,
+      orderBy: [
+        { sortOrder: 'asc' },
+        { businessName: 'asc' }
+      ],
+      take: limit,
       include: {
         services: {
           include: {
-            category: true
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true
+              }
+            }
           }
         },
         images: {
@@ -51,59 +59,71 @@ export async function GET(request: NextRequest) {
           select: {
             email: true
           }
+        },
+        reviews: {
+          select: {
+            rating: true
+          }
         }
-      },
-      orderBy: [
-        { sortOrder: 'asc' },
-        { businessName: 'asc' }
-      ],
-      take: limit,
-      skip: offset
+      }
     })
 
-    return NextResponse.json({
-      status: 'success',
-      providers: providers.map(provider => ({
+    // Process providers to include calculated fields
+    const processedProviders = providers.map(provider => {
+      // Calculate average rating
+      const avgRating = provider.reviews.length > 0
+        ? provider.reviews.reduce((sum, review) => sum + review.rating, 0) / provider.reviews.length
+        : 0
+
+      // Get primary image
+      const primaryImage = provider.images.find(img => img.type === 'PROFILE') || 
+                          provider.images[0] || 
+                          { url: '/images/default-provider.svg', alt: `${provider.businessName} - Business Photo` }
+
+      return {
         id: provider.id,
         businessName: provider.businessName,
+        slug: provider.slug,
         description: provider.description,
-        phone: provider.phone,
-        email: provider.user?.email || '',
-        website: provider.website,
-        address: provider.address,
-        city: provider.city,
-        state: provider.state,
-        zipCode: provider.zipCode,
+        rating: Math.round(avgRating * 10) / 10,
+        reviewCount: provider.reviews.length,
+        location: `${provider.city || 'Jacksonville'}, ${provider.state || 'FL'}`,
+        services: provider.services.map(service => ({
+          id: service.id,
+          categoryId: service.category.id,
+          categoryName: service.category.name,
+          categorySlug: service.category.slug
+        })),
         verified: provider.verified,
         premium: provider.premium,
         featured: provider.featured,
-        active: provider.active,
-        sortOrder: provider.sortOrder,
-        googlePlacesId: provider.googlePlacesId,
-        googleRating: provider.googleRating,
-        googleReviewCount: provider.googleReviewCount,
-        rating: provider.googleRating || 0,
-        reviewCount: provider.googleReviewCount || 0,
-        location: `${provider.city}, ${provider.state}`,
-        image: provider.images.length > 0 ? provider.images[0].url : '/images/default-provider.svg',
+        image: primaryImage.url,
         images: provider.images.map(img => ({
           id: img.id,
           url: img.url,
           alt: img.alt,
           type: img.type
         })),
-        services: provider.services.map(service => ({
-          id: service.id,
-          categoryId: service.categoryId,
-          categoryName: service.category.name,
-          categorySlug: service.category.slug
-        }))
-      }))
+        googleRating: provider.googleRating || 0,
+        googleReviewCount: provider.googleReviewCount || 0,
+        googlePlacesId: provider.googlePlacesId || '',
+        phone: provider.phone || '',
+        email: provider.user?.email || '',
+        website: provider.website || '',
+        address: provider.address || '',
+        city: provider.city || 'Jacksonville',
+        state: provider.state || 'FL'
+      }
     })
+
+    return NextResponse.json({
+      providers: processedProviders
+    })
+
   } catch (error) {
     console.error('Error fetching providers:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch providers' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
