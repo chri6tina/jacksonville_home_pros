@@ -34,16 +34,20 @@ export default function AdminProvidersPage() {
 
   const fetchProviders = async () => {
     try {
-      const response = await fetch('/api/providers')
+      setIsLoading(true)
+      setError(null)
+      
+      const response = await fetch('/api/admin/providers')
       const data = await response.json()
 
-      if (data.status === 'success' && data.providers) {
+      if (response.ok && data.status === 'success' && data.providers) {
         setProviders(data.providers)
       } else {
         setError(data.error || 'Failed to fetch providers')
         setProviders([])
       }
     } catch (err: any) {
+      console.error('Error fetching providers:', err)
       setError(err.message || 'An error occurred while fetching providers.')
       setProviders([])
     } finally {
@@ -64,7 +68,7 @@ export default function AdminProvidersPage() {
     setDeletingProvider(providerId)
 
     try {
-      const response = await fetch(`/api/providers/${providerId}`, {
+      const response = await fetch(`/api/admin/providers/${providerId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'
@@ -116,7 +120,7 @@ export default function AdminProvidersPage() {
 
   const toggleProviderStatus = async (providerId: string, currentActive: boolean) => {
     try {
-      const response = await fetch(`/api/providers/${providerId}`, {
+      const response = await fetch(`/api/admin/providers/${providerId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
