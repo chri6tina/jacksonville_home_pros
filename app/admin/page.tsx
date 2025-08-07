@@ -118,6 +118,8 @@ export default function AdminDashboard() {
       setLoading(false)
     }
   }
+  console.log('AdminDashboard - Rendering with stats:', stats)
+  
   return (
     <AdminAuthWrapper>
       <AdminLayout title="Dashboard" subtitle="Overview of your platform">
