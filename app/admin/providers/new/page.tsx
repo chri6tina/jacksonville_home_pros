@@ -251,27 +251,37 @@ export default function NewProviderPage() {
       googleReviewCount: place.user_ratings_total
     }))
     
-    // Fetch the first image from Google Places if available
+    // Fetch multiple images from Google Places if available
     if (place.photos && place.photos.length > 0) {
       try {
-        const firstPhoto = place.photos[0]
-        const imageUrl = `/api/google-places/photo?photoreference=${firstPhoto.photo_reference}&maxwidth=400`
+        // Import up to 5 photos (or all available if less than 5)
+        const maxPhotos = Math.min(place.photos.length, 5)
+        const photoPromises = place.photos.slice(0, maxPhotos).map(async (photo, index) => {
+          const imageUrl = `/api/google-places/photo?photoreference=${photo.photo_reference}&maxwidth=400`
+          
+          return {
+            url: imageUrl,
+            type: index === 0 ? 'PROFILE' : 'GALLERY',
+            caption: index === 0 
+              ? `${place.name} - Main Business Photo` 
+              : `${place.name} - Business Photo ${index + 1}`,
+            active: true
+          }
+        })
         
-        // Add the image to the form data
+        // Wait for all photo URLs to be generated
+        const photoImages = await Promise.all(photoPromises)
+        
+        // Add all images to the form data
         setFormData(prev => ({
           ...prev,
-          images: [{
-            url: imageUrl,
-            type: 'PROFILE',
-            caption: `${place.name} - Business Photo`,
-            active: true
-          }]
+          images: photoImages
         }))
         
-        toast.success('Google Places data and image imported successfully!')
+        toast.success(`Google Places data and ${maxPhotos} images imported successfully!`)
       } catch (error) {
-        console.error('Error fetching image:', error)
-        toast.success('Google Places data imported successfully! (Image could not be loaded)')
+        console.error('Error fetching images:', error)
+        toast.success('Google Places data imported successfully! (Images could not be loaded)')
       }
     } else {
       toast.success('Google Places data imported successfully!')
@@ -852,7 +862,8 @@ export default function NewProviderPage() {
           <div className="bg-white shadow rounded-lg p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Business Images</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Images will be displayed on the provider card and profile page. The first image will be used as the main profile photo.
+              Images will be displayed on the provider card and profile page. The first image will be used as the main profile photo. 
+              When importing from Google Places, up to 5 photos will be automatically added to create a gallery.
             </p>
             
             {formData.images.length > 0 ? (
@@ -871,6 +882,11 @@ export default function NewProviderPage() {
                       {index === 0 && (
                         <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
                           Main Photo
+                        </div>
+                      )}
+                      {index > 0 && (
+                        <div className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded">
+                          Gallery
                         </div>
                       )}
                       <button
@@ -909,7 +925,7 @@ export default function NewProviderPage() {
               <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                 <p className="text-gray-500">No images added yet</p>
                 <p className="text-sm text-gray-400 mt-1">
-                  Import images from Google Places or add them manually
+                  Import up to 5 images from Google Places or add them manually
                 </p>
               </div>
             )}
