@@ -351,8 +351,42 @@ export default function NewProviderPage() {
       const data = await response.json()
 
       if (response.ok && data.status === 'success') {
-        toast.success('Provider added successfully! Categories page will now show updated provider counts.')
-        router.push('/categories')
+        toast.success('Provider added successfully! You can now add another provider or go back to the providers list.')
+        
+        // Reset form for adding another provider
+        setFormData({
+          businessName: '',
+          description: '',
+          phone: '',
+          email: '',
+          website: '',
+          address: '',
+          city: '',
+          state: '',
+          latitude: undefined,
+          longitude: undefined,
+          serviceRadius: 25,
+          licenseNumber: '',
+          insuranceStatus: false,
+          verified: false,
+          premium: false,
+          featured: false,
+          active: true,
+          sortOrder: 0,
+          googlePlacesId: '',
+          googleRating: undefined,
+          googleReviewCount: undefined,
+          services: [],
+          serviceAreas: [],
+          operatingHours: [],
+          images: []
+        })
+        
+        // Reset Google Places data
+        setSelectedGooglePlace(null)
+        setGoogleSearchQuery('')
+        setGoogleSearchResults([])
+        setShowGoogleSearch(false)
       } else {
         toast.error(data.error || 'Failed to add provider')
       }
