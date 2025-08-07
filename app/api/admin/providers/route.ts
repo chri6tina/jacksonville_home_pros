@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAdmin } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
   try {
+    // Verify admin authentication
+    const adminUser = await requireAdmin()
+    
+    console.log('Admin providers accessed by:', adminUser.email)
+
     const { searchParams } = new URL(request.url)
     const includeInactive = searchParams.get('includeInactive') === 'true'
 
@@ -64,7 +70,12 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error fetching providers:', error)
+    console.error('Admin providers error:', error)
+    
+    if (error instanceof Error && error.message === 'Admin access required') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 401 })
+    }
+    
     return NextResponse.json(
       { error: 'Failed to fetch providers' },
       { status: 500 }
