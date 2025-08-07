@@ -53,8 +53,8 @@ export async function POST(request: NextRequest) {
       { expiresIn: '24h' }
     )
 
-    // Set admin session cookie
-    const cookieStore = cookies()
+    // Set admin session cookie (await the cookies function)
+    const cookieStore = await cookies()
     cookieStore.set('admin-session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
