@@ -158,7 +158,7 @@ export default function ProviderPositioning() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-neutral-50">
-        <Header />
+        <AdminHeader />
         <main className="container-responsive py-8">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">

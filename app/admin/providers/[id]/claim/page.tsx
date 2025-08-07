@@ -72,7 +72,7 @@ export default function ClaimProviderPage() {
   }
 
   const handleClaim = async () => {
-    if (!session?.user || !provider) return
+    if (!provider) return
 
     setClaiming(true)
     setError(null)
@@ -84,7 +84,6 @@ export default function ClaimProviderPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          userId: session.user.id,
           claimToken: claimToken
         })
       })
@@ -236,7 +235,7 @@ export default function ClaimProviderPage() {
                   <div>
                     <p className="font-medium text-gray-900">Email Verification</p>
                     <p className="text-sm text-gray-600">
-                      Your email ({session?.user?.email}) will be verified against the business email
+                      Your admin account will be verified against the business email
                     </p>
                   </div>
                 </div>
