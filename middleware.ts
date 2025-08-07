@@ -2,31 +2,35 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
+  const path = request.nextUrl.pathname
+  console.log('Middleware - Path:', path)
   
-  console.log('Middleware - Path:', request.nextUrl.pathname, 'IsAdminRoute:', isAdminRoute)
-  
-  // Skip admin login page itself and any debug pages
-  if (request.nextUrl.pathname === '/admin/login' || request.nextUrl.pathname.startsWith('/debug-admin')) {
-    console.log('Middleware - Skipping admin login/debug page')
-    return NextResponse.next()
-  }
-  
-  // TEMPORARY: Less strict middleware for debugging
-  // Only redirect if accessing specific admin pages, not the main /admin route initially
-  if (isAdminRoute && request.nextUrl.pathname !== '/admin') {
-    const adminSession = request.cookies.get('admin-session')?.value
+  // Handle admin routes completely separate from NextAuth
+  if (path.startsWith('/admin')) {
+    console.log('Middleware - Admin route detected')
     
+    // Always allow admin login page
+    if (path === '/admin/login') {
+      console.log('Middleware - Allowing admin login page')
+      return NextResponse.next()
+    }
+    
+    // Check for admin session on other admin routes
+    const adminSession = request.cookies.get('admin-session')?.value
     console.log('Middleware - Admin session exists:', !!adminSession)
     
     if (!adminSession) {
-      console.log('Middleware - No admin session, redirecting to login')
-      // No admin session, redirect to admin login
-      return NextResponse.redirect(new URL('/admin/login', request.url))
+      console.log('Middleware - No admin session, redirecting to admin login')
+      const loginUrl = new URL('/admin/login', request.url)
+      return NextResponse.redirect(loginUrl)
     }
+    
+    console.log('Middleware - Admin session found, allowing access')
+    return NextResponse.next()
   }
   
-  console.log('Middleware - Allowing access')
+  // For non-admin routes, let NextAuth handle them
+  console.log('Middleware - Non-admin route, allowing NextAuth to handle')
   return NextResponse.next()
 }
 
