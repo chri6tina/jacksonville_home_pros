@@ -143,11 +143,13 @@ export default function NewProviderPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories')
+      const response = await fetch('/api/admin/categories')
       const data = await response.json()
       
-      if (data.status === 'success' && data.categories) {
+      if (response.ok && data.status === 'success' && data.categories) {
         setCategories(data.categories)
+      } else {
+        console.error('Failed to fetch categories:', data.error)
       }
     } catch (error) {
       console.error('Error fetching categories:', error)
