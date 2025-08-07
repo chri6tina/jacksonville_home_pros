@@ -58,11 +58,21 @@ export async function GET(request: NextRequest) {
             slug: true
           }
         },
+        images: {
+          select: {
+            id: true,
+            url: true,
+            alt: true
+          }
+        },
         replies: {
           select: {
             id: true,
             content: true,
             createdAt: true
+          },
+          orderBy: {
+            createdAt: 'asc'
           }
         }
       },

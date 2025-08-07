@@ -10,15 +10,35 @@ import {
   XMarkIcon,
   TrashIcon,
   StarIcon,
-  FlagIcon
+  FlagIcon,
+  PhotoIcon,
+  ChatBubbleLeftIcon,
+  XMarkIcon as CloseIcon
 } from '@heroicons/react/24/outline'
+
+interface ReviewImage {
+  id: string
+  url: string
+  alt?: string
+}
+
+interface ReviewReply {
+  id: string
+  content: string
+  createdAt: string
+}
 
 interface Review {
   id: string
   rating: number
   title: string
   content: string
+  quality?: number
+  timeliness?: number
+  value?: number
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  source: 'ONSITE' | 'GOOGLE' | 'YELP' | 'FACEBOOK' | 'OTHER'
+  verified: boolean
   createdAt: string
   user: {
     id: string
@@ -30,11 +50,8 @@ interface Review {
     businessName: string
     slug: string
   }
-  reply?: {
-    id: string
-    content: string
-    createdAt: string
-  }
+  images: ReviewImage[]
+  replies: ReviewReply[]
 }
 
 export default function ReviewsPage() {
@@ -44,6 +61,10 @@ export default function ReviewsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [selectedReview, setSelectedReview] = useState<Review | null>(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [replyContent, setReplyContent] = useState('')
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false)
 
   useEffect(() => {
     fetchReviews()
@@ -101,6 +122,11 @@ export default function ReviewsPage() {
             ? { ...review, status }
             : review
         ))
+        
+        // Update selected review if it's the one being modified
+        if (selectedReview?.id === reviewId) {
+          setSelectedReview({ ...selectedReview, status })
+        }
       }
     } catch (error) {
       console.error('Error updating review status:', error)
@@ -120,9 +146,61 @@ export default function ReviewsPage() {
       if (response.ok) {
         // Remove from local state
         setReviews(reviews.filter(review => review.id !== reviewId))
+        
+        // Close modal if the deleted review was selected
+        if (selectedReview?.id === reviewId) {
+          setShowDetailModal(false)
+          setSelectedReview(null)
+        }
       }
     } catch (error) {
       console.error('Error deleting review:', error)
+    }
+  }
+
+  const openDetailModal = async (review: Review) => {
+    setSelectedReview(review)
+    setShowDetailModal(true)
+    setReplyContent('')
+  }
+
+  const handleReplySubmit = async (reviewId: string) => {
+    if (!replyContent.trim()) return
+
+    try {
+      setIsSubmittingReply(true)
+      const response = await fetch(`/api/admin/reviews/${reviewId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ content: replyContent })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Add the new reply to the selected review
+        if (selectedReview) {
+          setSelectedReview({
+            ...selectedReview,
+            replies: [...selectedReview.replies, data.reply]
+          })
+        }
+        
+        // Update the review in the list
+        setReviews(reviews.map(review => 
+          review.id === reviewId 
+            ? { ...review, replies: [...review.replies, data.reply] }
+            : review
+        ))
+        
+        setReplyContent('')
+      }
+    } catch (error) {
+      console.error('Error submitting reply:', error)
+    } finally {
+      setIsSubmittingReply(false)
     }
   }
 
@@ -140,6 +218,22 @@ export default function ReviewsPage() {
     }
   }
 
+  const getSourceBadge = (source: string) => {
+    const baseClasses = "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+    switch (source) {
+      case 'ONSITE':
+        return `${baseClasses} bg-blue-100 text-blue-800`
+      case 'GOOGLE':
+        return `${baseClasses} bg-red-100 text-red-800`
+      case 'YELP':
+        return `${baseClasses} bg-yellow-100 text-yellow-800`
+      case 'FACEBOOK':
+        return `${baseClasses} bg-indigo-100 text-indigo-800`
+      default:
+        return `${baseClasses} bg-gray-100 text-gray-800`
+    }
+  }
+
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <StarIcon
@@ -149,6 +243,44 @@ export default function ReviewsPage() {
         }`}
       />
     ))
+  }
+
+  const renderRatingBreakdown = (review: Review) => {
+    if (!review.quality && !review.timeliness && !review.value) {
+      return null
+    }
+
+    return (
+      <div className="space-y-2">
+        {review.quality && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">Quality:</span>
+            <div className="flex items-center">
+              {renderStars(review.quality)}
+              <span className="ml-1 text-sm text-gray-600">{review.quality}/5</span>
+            </div>
+          </div>
+        )}
+        {review.timeliness && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">Timeliness:</span>
+            <div className="flex items-center">
+              {renderStars(review.timeliness)}
+              <span className="ml-1 text-sm text-gray-600">{review.timeliness}/5</span>
+            </div>
+          </div>
+        )}
+        {review.value && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600">Value:</span>
+            <div className="flex items-center">
+              {renderStars(review.value)}
+              <span className="ml-1 text-sm text-gray-600">{review.value}/5</span>
+            </div>
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -215,6 +347,9 @@ export default function ReviewsPage() {
                       Rating
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Source
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -238,6 +373,25 @@ export default function ReviewsPage() {
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
                             by {review.user.name || review.user.email}
+                            {review.verified && (
+                              <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                ✓ Verified
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2 mt-2">
+                            {review.images.length > 0 && (
+                              <span className="inline-flex items-center text-xs text-gray-500">
+                                <PhotoIcon className="w-3 h-3 mr-1" />
+                                {review.images.length} photo{review.images.length !== 1 ? 's' : ''}
+                              </span>
+                            )}
+                            {review.replies.length > 0 && (
+                              <span className="inline-flex items-center text-xs text-gray-500">
+                                <ChatBubbleLeftIcon className="w-3 h-3 mr-1" />
+                                {review.replies.length} repl{review.replies.length === 1 ? 'y' : 'ies'}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -253,6 +407,11 @@ export default function ReviewsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={getSourceBadge(review.source)}>
+                          {review.source}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <span className={getStatusBadge(review.status)}>
                           {review.status}
                         </span>
@@ -262,7 +421,11 @@ export default function ReviewsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
-                          <button className="text-blue-600 hover:text-blue-900">
+                          <button 
+                            onClick={() => openDetailModal(review)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="View Details"
+                          >
                             <EyeIcon className="w-4 h-4" />
                           </button>
                           
@@ -350,6 +513,184 @@ export default function ReviewsPage() {
           </>
         )}
       </div>
+
+      {/* Review Detail Modal */}
+      {showDetailModal && selectedReview && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Review Details</h3>
+              <button
+                onClick={() => {
+                  setShowDetailModal(false)
+                  setSelectedReview(null)
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <CloseIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Review Header */}
+              <div className="border-b pb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xl font-semibold text-gray-900">{selectedReview.title}</h4>
+                  <div className="flex items-center space-x-2">
+                    <span className={getStatusBadge(selectedReview.status)}>
+                      {selectedReview.status}
+                    </span>
+                    <span className={getSourceBadge(selectedReview.source)}>
+                      {selectedReview.source}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                  <span>by {selectedReview.user.name || selectedReview.user.email}</span>
+                  <span>•</span>
+                  <span>{new Date(selectedReview.createdAt).toLocaleDateString()}</span>
+                  {selectedReview.verified && (
+                    <>
+                      <span>•</span>
+                      <span className="text-green-600 font-medium">✓ Verified</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Main Rating */}
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center">
+                  {renderStars(selectedReview.rating)}
+                  <span className="ml-2 text-lg font-medium text-gray-900">
+                    {selectedReview.rating}/5
+                  </span>
+                </div>
+              </div>
+
+              {/* Rating Breakdown */}
+              {renderRatingBreakdown(selectedReview) && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h5 className="text-sm font-medium text-gray-900 mb-3">Detailed Ratings</h5>
+                  {renderRatingBreakdown(selectedReview)}
+                </div>
+              )}
+
+              {/* Review Content */}
+              <div>
+                <h5 className="text-sm font-medium text-gray-900 mb-2">Review</h5>
+                <p className="text-gray-700 whitespace-pre-wrap">{selectedReview.content}</p>
+              </div>
+
+              {/* Review Images */}
+              {selectedReview.images.length > 0 && (
+                <div>
+                  <h5 className="text-sm font-medium text-gray-900 mb-3">
+                    Photos ({selectedReview.images.length})
+                  </h5>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {selectedReview.images.map((image) => (
+                      <div key={image.id} className="relative">
+                        <img
+                          src={image.url}
+                          alt={image.alt || 'Review photo'}
+                          className="w-full h-32 object-cover rounded-lg"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Provider Replies */}
+              {selectedReview.replies.length > 0 && (
+                <div>
+                  <h5 className="text-sm font-medium text-gray-900 mb-3">
+                    Provider Response{selectedReview.replies.length > 1 ? 's' : ''}
+                  </h5>
+                  <div className="space-y-3">
+                    {selectedReview.replies.map((reply) => (
+                      <div key={reply.id} className="bg-blue-50 p-4 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-blue-900">
+                            {selectedReview.provider.businessName}
+                          </span>
+                          <span className="text-xs text-blue-600">
+                            {new Date(reply.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-blue-800 whitespace-pre-wrap">{reply.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Add Reply Form */}
+              <div className="border-t pt-4">
+                <h5 className="text-sm font-medium text-gray-900 mb-3">Add Provider Response</h5>
+                <div className="space-y-3">
+                  <textarea
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    placeholder="Enter provider response..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => handleReplySubmit(selectedReview.id)}
+                      disabled={!replyContent.trim() || isSubmittingReply}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmittingReply ? 'Adding...' : 'Add Response'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                {selectedReview.status === 'PENDING' && (
+                  <>
+                    <button
+                      onClick={() => handleStatusUpdate(selectedReview.id, 'APPROVED')}
+                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleStatusUpdate(selectedReview.id, 'REJECTED')}
+                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                    >
+                      Reject
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={() => handleDeleteReview(selectedReview.id)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false)
+                    setSelectedReview(null)
+                  }}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   )
 } 

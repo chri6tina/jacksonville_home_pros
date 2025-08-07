@@ -42,6 +42,23 @@ export async function PATCH(
             businessName: true,
             slug: true
           }
+        },
+        images: {
+          select: {
+            id: true,
+            url: true,
+            alt: true
+          }
+        },
+        replies: {
+          select: {
+            id: true,
+            content: true,
+            createdAt: true
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
         }
       }
     })
@@ -79,6 +96,47 @@ export async function DELETE(
 
   } catch (error) {
     console.error('Error deleting review:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    // Check authentication and admin role
+    const session = await getServerSession()
+    if (!session?.user || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { id } = await params
+    const body = await request.json()
+    const { content } = body
+
+    if (!content || content.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Reply content is required' },
+        { status: 400 }
+      )
+    }
+
+    // Create provider reply
+    const reply = await prisma.reviewReply.create({
+      data: {
+        reviewId: id,
+        content: content.trim()
+      }
+    })
+
+    return NextResponse.json({ reply })
+
+  } catch (error) {
+    console.error('Error creating reply:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
