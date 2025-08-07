@@ -19,6 +19,8 @@ export default function AdminLoginPage() {
     setError('')
 
     try {
+      console.log('Attempting admin login with:', { email })
+      
       const response = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: {
@@ -27,7 +29,10 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ email, password }),
       })
 
+      console.log('Login response status:', response.status)
+      
       const data = await response.json()
+      console.log('Login response data:', data)
 
       if (!response.ok) {
         setError(data.error || 'Login failed')
@@ -35,10 +40,24 @@ export default function AdminLoginPage() {
       }
 
       if (data.success) {
-        // Redirect to admin dashboard
-        router.push('/admin')
+        console.log('Login successful, redirecting to admin...')
+        // Try router.push first, then fallback to window.location
+        try {
+          router.push('/admin')
+          // Fallback redirect after a short delay
+          setTimeout(() => {
+            console.log('Fallback redirect to /admin')
+            window.location.href = '/admin'
+          }, 1000)
+        } catch (redirectError) {
+          console.error('Router redirect failed:', redirectError)
+          window.location.href = '/admin'
+        }
+      } else {
+        setError('Login failed - unexpected response')
       }
     } catch (error) {
+      console.error('Login error:', error)
       setError('An error occurred. Please try again.')
     } finally {
       setIsLoading(false)
