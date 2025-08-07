@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn, getSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 
@@ -12,7 +12,17 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Check for URL parameters on component mount
+  useEffect(() => {
+    const errorParam = searchParams.get('error')
+    if (errorParam === 'unauthorized') {
+      setInfo('Please sign in with an admin account to access the admin dashboard.')
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,9 +39,18 @@ export default function SignInPage() {
       if (result?.error) {
         setError('Invalid email or password')
       } else {
-        // Redirect to dashboard - role-based redirect will be handled by middleware
-        console.log('Sign in successful, redirecting...')
-        router.push('/dashboard')
+        // Get the session to check user role
+        const session = await getSession()
+        
+        if (session?.user?.role === 'ADMIN') {
+          // Admin users go to admin dashboard
+          console.log('Admin login successful, redirecting to admin...')
+          router.push('/admin')
+        } else {
+          // Regular users go to dashboard
+          console.log('User login successful, redirecting to dashboard...')
+          router.push('/dashboard')
+        }
       }
     } catch (error) {
       setError('An error occurred. Please try again.')
@@ -64,6 +83,11 @@ export default function SignInPage() {
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+            {info && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-600">{info}</p>
               </div>
             )}
 
