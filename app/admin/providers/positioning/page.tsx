@@ -11,7 +11,7 @@ import {
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline'
 import Link from 'next/link'
-import { Header } from '@/components/layout/header'
+import { AdminHeader } from '@/components/layout/admin-header'
 import { Footer } from '@/components/layout/footer'
 
 interface Provider {
@@ -174,7 +174,7 @@ export default function ProviderPositioning() {
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      <Header />
+      <AdminHeader />
       <main className="container-responsive py-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}

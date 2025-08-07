@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+// Admin routes use custom JWT auth, not NextAuth
 import Link from 'next/link'
 import { 
   BuildingOfficeIcon, 
@@ -32,7 +32,6 @@ interface Provider {
 }
 
 export default function ClaimProviderPage() {
-  const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
   const providerId = searchParams.get('id')
@@ -45,17 +44,14 @@ export default function ClaimProviderPage() {
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    if (status === 'loading') return
-    
-    if (!session) {
-      router.push(`/auth/signin?callbackUrl=${encodeURIComponent(window.location.href)}`)
-      return
-    }
-
-    if (providerId) {
+    // Admin page - skip NextAuth session checks
+    if (providerId && claimToken) {
       fetchProvider()
+    } else {
+      setError('Missing provider ID or claim token')
+      setLoading(false)
     }
-  }, [session, status, providerId])
+  }, [providerId, claimToken])
 
   const fetchProvider = async () => {
     try {
