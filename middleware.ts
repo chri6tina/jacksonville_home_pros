@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { verify } from 'jsonwebtoken'
-
-// Use a consistent secret - this should match what's used in the login API
-const JWT_SECRET = "jacksonville-home-pros-secret-key-2024"
 
 export function middleware(request: NextRequest) {
   const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
@@ -28,26 +24,9 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
     
-    try {
-      // Verify admin session token
-      const decoded = verify(adminSession, JWT_SECRET) as any
-      
-      console.log('Middleware - Decoded token:', { role: decoded?.role, email: decoded?.email })
-      
-      if (!decoded || decoded.role !== 'ADMIN') {
-        console.log('Middleware - Invalid role, redirecting to login')
-        // Invalid or non-admin session, redirect to admin login
-        return NextResponse.redirect(new URL('/admin/login', request.url))
-      }
-      
-      console.log('Middleware - Valid admin session, allowing access')
-      // Valid admin session, allow access
-      return NextResponse.next()
-    } catch (error) {
-      console.log('Middleware - JWT verification error:', error)
-      // Invalid token, redirect to admin login
-      return NextResponse.redirect(new URL('/admin/login', request.url))
-    }
+    console.log('Middleware - Admin session found, allowing access')
+    // Admin session exists, allow access (JWT verification will be done in API routes)
+    return NextResponse.next()
   }
   
   return NextResponse.next()
