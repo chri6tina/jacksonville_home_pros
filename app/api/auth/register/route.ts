@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!['CUSTOMER', 'PROVIDER'].includes(role)) {
+    if (!['HOMEOWNER', 'PROVIDER'].includes(role)) {
       return NextResponse.json(
         { message: 'Invalid user role' },
         { status: 400 }
