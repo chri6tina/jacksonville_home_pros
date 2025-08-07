@@ -1,0 +1,55 @@
+{
+  "name": "jacksonville-home-pros",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "create-admin": "ts-node scripts/create-admin.ts"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "dependencies": {
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.0.18",
+    "@hookform/resolvers": "^3.3.2",
+    "@next-auth/prisma-adapter": "^1.0.7",
+    "@prisma/client": "^5.7.1",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.53.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.10.5",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "autoprefixer": "^10.4.16",
+    "bcryptjs": "^2.4.3",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "framer-motion": "^10.16.16",
+    "lucide-react": "^0.294.0",
+    "next": "^15.4.6",
+    "next-auth": "^4.24.11",
+    "postcss": "^8.4.32",
+    "prisma": "^5.7.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.48.2",
+    "react-hot-toast": "^2.4.1",
+    "square": "^35.1.0",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^3.3.6",
+    "typescript": "^5.3.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "14.0.4",
+    "ts-node": "^10.9.2"
+  }
+}

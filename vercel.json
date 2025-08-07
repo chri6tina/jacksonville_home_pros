@@ -1,0 +1,16 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "env": {
+    "NEXTAUTH_URL": "@nextauth_url",
+    "NEXTAUTH_SECRET": "@nextauth_secret",
+    "DATABASE_URL": "@database_url",
+    "GOOGLE_PLACES_API_KEY": "@google_places_api_key",
+    "SQUARE_ACCESS_TOKEN": "@square_access_token",
+    "SQUARE_ENVIRONMENT": "@square_environment",
+    "SQUARE_APPLICATION_ID": "@square_application_id",
+    "SQUARE_LOCATION_ID": "@square_location_id"
+  }
+} 

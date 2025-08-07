@@ -1,0 +1,526 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User accounts for both homeowners and service providers
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String?
+  phone         String?
+  role          UserRole  @default(HOMEOWNER)
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Provider-specific fields
+  provider      Provider?
+  
+  // Claiming and notifications
+  claimInvitations ClaimInvitation[]
+  notifications    Notification[]
+
+  // Homeowner-specific fields
+  bookings      Booking[]
+  reviews       Review[]
+  favorites     Favorite[]
+  quoteRequests QuoteRequest[]
+
+  // Account verification
+  accounts      Account[]
+  sessions      Session[]
+  
+  // Notifications and claiming
+  notifications Notification[]
+  claimInvitationsSent ClaimInvitation[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  HOMEOWNER
+  PROVIDER
+  ADMIN
+}
+
+// OAuth accounts (Google, Facebook, etc.)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// User sessions
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// Verification tokens for email verification
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Service provider business profiles
+model Provider {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  businessName      String
+  slug              String   @unique // SEO-friendly URL slug
+  description       String   @db.Text
+  phone             String
+  website           String?
+  address           String
+  city              String   @default("Jacksonville")
+  state             String   @default("FL")
+  zipCode           String?
+  latitude          Float?
+  longitude         Float?
+  serviceRadius     Int      @default(25) // miles
+  licenseNumber     String?
+  insuranceStatus   Boolean  @default(false)
+  verified          Boolean  @default(false)
+  premium           Boolean  @default(false)
+  featured          Boolean  @default(false)
+  sortOrder         Int      @default(0) // For controlling display order/priority
+  active            Boolean  @default(true)
+  // Google Places integration
+  googlePlacesId    String?
+  googleRating      Float?
+  googleReviewCount Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  services          ProviderService[]
+  serviceAreas      ServiceArea[]
+  reviews           Review[]
+  bookings          Booking[]
+  images            ProviderImage[]
+  operatingHours    OperatingHours[]
+  quoteRequests     QuoteRequest[]
+  quoteResponses    QuoteResponse[]
+  favorites         Favorite[]
+  payments          Payment[]
+
+  @@map("providers")
+}
+
+// Three-level category system
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?  @db.Text
+  icon        String?
+  level       CategoryLevel
+  parentId    String?
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  services    ProviderService[]
+  quoteRequests QuoteRequest[]
+
+  @@map("categories")
+}
+
+enum CategoryLevel {
+  PRIMARY
+  SECONDARY
+  TERTIARY
+}
+
+// Provider services (many-to-many relationship)
+model ProviderService {
+  id         String   @id @default(cuid())
+  providerId String
+  categoryId String
+  description String? @db.Text
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  bookings   Booking[]
+
+  @@unique([providerId, categoryId])
+  @@map("provider_services")
+}
+
+
+
+// Service areas (zip codes, neighborhoods, custom polygons)
+model ServiceArea {
+  id         String   @id @default(cuid())
+  providerId String
+  name       String
+  type       AreaType
+  coordinates Json?   // For custom polygons
+  zipCodes   String[] // Array of zip codes
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@map("service_areas")
+}
+
+enum AreaType {
+  RADIUS
+  ZIP_CODES
+  CUSTOM_POLYGON
+}
+
+// Provider images and galleries
+model ProviderImage {
+  id         String   @id @default(cuid())
+  providerId String
+  url        String
+  alt        String?
+  type       ImageType @default(GALLERY)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  // Relations
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@map("provider_images")
+}
+
+enum ImageType {
+  PROFILE
+  GALLERY
+  LOGO
+}
+
+// Operating hours
+model OperatingHours {
+  id         String   @id @default(cuid())
+  providerId String
+  dayOfWeek  Int      // 0 = Sunday, 1 = Monday, etc.
+  openTime   String?  // HH:MM format
+  closeTime  String?  // HH:MM format
+  closed     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, dayOfWeek])
+  @@map("operating_hours")
+}
+
+// Reviews and ratings
+model Review {
+  id         String   @id @default(cuid())
+  providerId String
+  userId     String
+  rating     Int      // 1-5 stars
+  title      String?
+  content    String   @db.Text
+  quality    Int?     // 1-5 rating for quality
+  timeliness Int?     // 1-5 rating for timeliness
+  value      Int?     // 1-5 rating for value
+  verified   Boolean  @default(false)
+  source     ReviewSource @default(ONSITE)
+  externalId String?  // For external platform reviews
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  images     ReviewImage[]
+  replies    ReviewReply[]
+
+  @@map("reviews")
+}
+
+enum ReviewSource {
+  ONSITE
+  GOOGLE
+  YELP
+  FACEBOOK
+  OTHER
+}
+
+// Review images
+model ReviewImage {
+  id       String @id @default(cuid())
+  reviewId String
+  url      String
+  alt      String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@map("review_images")
+}
+
+// Provider replies to reviews
+model ReviewReply {
+  id        String   @id @default(cuid())
+  reviewId  String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@map("review_replies")
+}
+
+// Booking system
+model Booking {
+  id          String        @id @default(cuid())
+  providerId  String
+  userId      String
+  serviceId   String?
+  date        DateTime
+  startTime   String        // HH:MM format
+  endTime     String        // HH:MM format
+  duration    Int           // minutes
+  status      BookingStatus @default(PENDING)
+  notes       String?       @db.Text
+  address     String?
+  totalPrice  Float?
+  deposit     Float?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  provider    Provider      @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service     ProviderService? @relation(fields: [serviceId], references: [id])
+  payments    Payment[]
+
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+// Quote requests
+model QuoteRequest {
+  id          String   @id @default(cuid())
+  userId      String
+  providerId  String?
+  categoryId  String
+  title       String
+  description String   @db.Text
+  address     String
+  budget      Float?
+  timeline    String?
+  status      QuoteStatus @default(OPEN)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider    Provider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  responses   QuoteResponse[]
+
+  @@map("quote_requests")
+}
+
+enum QuoteStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+  AWARDED
+}
+
+// Quote responses from providers
+model QuoteResponse {
+  id              String   @id @default(cuid())
+  quoteRequestId  String
+  providerId      String
+  amount          Float
+  description     String   @db.Text
+  timeline        String?
+  accepted        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  quoteRequest    QuoteRequest @relation(fields: [quoteRequestId], references: [id], onDelete: Cascade)
+  provider        Provider     @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@map("quote_responses")
+}
+
+// User favorites
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  providerId String
+  createdAt  DateTime @default(now())
+
+  // Relations
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, providerId])
+  @@map("favorites")
+}
+
+// Payment tracking
+model Payment {
+  id          String        @id @default(cuid())
+  providerId  String
+  bookingId   String?
+  amount      Float
+  currency    String        @default("USD")
+  status      PaymentStatus @default(PENDING)
+  type        PaymentType
+  stripeId    String?
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  provider    Provider      @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  booking     Booking?      @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@map("payments")
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentType {
+  DEPOSIT
+  FULL_PAYMENT
+  SUBSCRIPTION
+  FEATURED_LISTING
+}
+
+// Jacksonville neighborhoods and locations
+model Location {
+  id          String   @id @default(cuid())
+  name        String
+  type        LocationType
+  zipCode     String?
+  latitude    Float?
+  longitude   Float?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("locations")
+}
+
+enum LocationType {
+  NEIGHBORHOOD
+  ZIP_CODE
+  CITY
+  COUNTY
+}
+
+// Analytics tracking
+model Analytics {
+  id          String   @id @default(cuid())
+  providerId  String?
+  userId      String?
+  event       String
+  properties  Json?
+  timestamp   DateTime @default(now())
+
+  @@map("analytics")
+}
+
+// Provider claiming invitations
+model ClaimInvitation {
+  id         String   @id @default(cuid())
+  providerId String
+  email      String
+  token      String   @unique
+  expiresAt  DateTime
+  sentBy     String
+  used       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  // Relations
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  sentByUser User     @relation("ClaimInvitationsSent", fields: [sentBy], references: [id], onDelete: Cascade)
+
+  @@map("claim_invitations")
+}
+
+// Notifications
+model Notification {
+  id         String   @id @default(cuid())
+  type       String
+  title      String
+  message    String   @db.Text
+  userId     String?
+  providerId String?
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  // Relations
+  user       User?    @relation("Notifications", fields: [userId], references: [id], onDelete: Cascade)
+  provider   Provider? @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+} 
