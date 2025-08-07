@@ -189,12 +189,10 @@ export default function AdminLayout({
               {/* Logout button */}
               <button
                 onClick={() => {
-                  // Clear all auth methods
-                  localStorage.removeItem('admin-authenticated')
-                  sessionStorage.removeItem('admin-session')
-                  document.cookie = 'admin-auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+                  // Clear admin session cookie
                   document.cookie = 'admin-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-                  window.location.href = '/admin-login-fresh'
+                  // Redirect to admin login
+                  window.location.href = '/admin/login'
                 }}
                 className="text-sm font-medium text-red-600 hover:text-red-700"
               >

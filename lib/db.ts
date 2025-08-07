@@ -10,8 +10,14 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
       url: process.env.DATABASE_URL,
     },
   },
-  // Connection pool configuration to prevent timeouts
+  // Serverless configuration for Vercel
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  // Add connection timeout and retry settings
+  errorFormat: 'pretty',
+  transactionOptions: {
+    maxWait: 5000, // 5 seconds
+    timeout: 10000, // 10 seconds
+  }
 })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma 

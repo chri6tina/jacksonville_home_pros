@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import AdminLayout from '@/components/layout/admin-layout'
-import FreshAdminAuth from '@/lib/fresh-admin-auth'
+import AdminAuthWrapper from '@/components/admin-auth-wrapper'
 import { 
   BuildingOfficeIcon,
   WrenchScrewdriverIcon,
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
     }
   }
   return (
-    <FreshAdminAuth>
+    <AdminAuthWrapper>
       <AdminLayout title="Dashboard" subtitle="Overview of your platform">
       {/* Quick Actions */}
       <div className="mb-8">
@@ -304,6 +304,6 @@ export default function AdminDashboard() {
         </div>
       </div>
       </AdminLayout>
-    </FreshAdminAuth>
+    </AdminAuthWrapper>
   )
 } 
