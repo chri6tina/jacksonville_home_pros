@@ -6,8 +6,17 @@ export async function GET(request: NextRequest) {
   try {
     // Check authentication and admin role
     const session = await getServerSession()
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    
+    console.log('Admin dashboard session:', session)
+    
+    if (!session?.user) {
+      console.log('No session found')
+      return NextResponse.json({ error: 'No session found' }, { status: 401 })
+    }
+    
+    if (session.user.role !== 'ADMIN') {
+      console.log('User role is not admin:', session.user.role)
+      return NextResponse.json({ error: 'Admin access required' }, { status: 401 })
     }
 
     // Test database connection first

@@ -34,7 +34,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
       '🎨': PaintBrushIcon,
       '🌿': SparklesIcon,
       '❄️': SunIcon,
-      '🔧': WrenchScrewdriverIcon,
+      '🔨': WrenchScrewdriverIcon,
       '🏠': HomeIcon,
       '📦': TruckIcon,
       '👴': HeartIcon,
