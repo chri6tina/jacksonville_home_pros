@@ -186,6 +186,21 @@ export default function AdminLayout({
             </div>
 
             <div className="flex items-center gap-x-4 lg:gap-x-6">
+              {/* Logout button */}
+              <button
+                onClick={() => {
+                  // Clear all auth methods
+                  localStorage.removeItem('admin-authenticated')
+                  sessionStorage.removeItem('admin-session')
+                  document.cookie = 'admin-auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+                  document.cookie = 'admin-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+                  window.location.href = '/admin-login-fresh'
+                }}
+                className="text-sm font-medium text-red-600 hover:text-red-700"
+              >
+                Logout
+              </button>
+              
               {/* Back to main site */}
               <Link
                 href="/"
