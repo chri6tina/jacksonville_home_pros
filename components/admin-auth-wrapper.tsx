@@ -13,30 +13,11 @@ export default function AdminAuthWrapper({ children }: AdminAuthWrapperProps) {
   const router = useRouter()
 
   useEffect(() => {
-    const checkAuth = () => {
-      try {
-        // Simply check for admin session cookie - if middleware allowed us here, session is valid
-        const hasAdminCookie = document.cookie.includes('admin-session=')
-        console.log('AdminAuthWrapper - Cookie check:', hasAdminCookie)
-        
-        if (hasAdminCookie) {
-          console.log('AdminAuthWrapper - Cookie found, setting authenticated')
-          setIsAuthenticated(true)
-        } else {
-          console.log('AdminAuthWrapper - No cookie, setting unauthenticated')
-          setIsAuthenticated(false)
-        }
-      } catch (error) {
-        console.error('Auth check error:', error)
-        setIsAuthenticated(false)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    // Small delay to ensure cookies are set after login redirect
-    const timer = setTimeout(checkAuth, 100)
-    return () => clearTimeout(timer)
+    // If we're on this page, middleware already validated the session
+    // No need to check cookies (they're httpOnly anyway)
+    console.log('AdminAuthWrapper - Middleware validated session, allowing access')
+    setIsAuthenticated(true)
+    setIsLoading(false)
   }, [])
 
   // Redirect to login if not authenticated
