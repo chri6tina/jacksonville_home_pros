@@ -148,6 +148,29 @@ export default function AdminLoginPage() {
                 Sign in here
               </Link>
             </div>
+            
+            {/* Debug Info */}
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-xs text-yellow-800 mb-1">
+                <strong>Admin Credentials:</strong>
+              </p>
+              <p className="text-xs text-yellow-700">
+                Email: admin@jacksonvillehomepros.com
+              </p>
+              <p className="text-xs text-yellow-700">
+                Password: admin123
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('admin@jacksonvillehomepros.com')
+                  setPassword('admin123')
+                }}
+                className="mt-2 text-xs bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-700"
+              >
+                Fill Credentials
+              </button>
+            </div>
           </div>
         </div>
       </div>

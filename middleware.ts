@@ -6,14 +6,15 @@ export function middleware(request: NextRequest) {
   
   console.log('Middleware - Path:', request.nextUrl.pathname, 'IsAdminRoute:', isAdminRoute)
   
-  // Skip admin login page itself
-  if (request.nextUrl.pathname === '/admin/login') {
-    console.log('Middleware - Skipping admin login page')
+  // Skip admin login page itself and any debug pages
+  if (request.nextUrl.pathname === '/admin/login' || request.nextUrl.pathname.startsWith('/debug-admin')) {
+    console.log('Middleware - Skipping admin login/debug page')
     return NextResponse.next()
   }
   
-  // If accessing admin routes, check for admin session
-  if (isAdminRoute) {
+  // TEMPORARY: Less strict middleware for debugging
+  // Only redirect if accessing specific admin pages, not the main /admin route initially
+  if (isAdminRoute && request.nextUrl.pathname !== '/admin') {
     const adminSession = request.cookies.get('admin-session')?.value
     
     console.log('Middleware - Admin session exists:', !!adminSession)
@@ -23,12 +24,9 @@ export function middleware(request: NextRequest) {
       // No admin session, redirect to admin login
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
-    
-    console.log('Middleware - Admin session found, allowing access')
-    // Admin session exists, allow access (JWT verification will be done in API routes)
-    return NextResponse.next()
   }
   
+  console.log('Middleware - Allowing access')
   return NextResponse.next()
 }
 
