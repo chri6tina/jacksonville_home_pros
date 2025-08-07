@@ -33,13 +33,16 @@ export default function AdminCategoriesPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories')
+      setIsLoading(true)
+      setError(null)
+      
+      const response = await fetch('/api/admin/categories')
       const data = await response.json()
       
-      if (data.status === 'success' && data.categories) {
+      if (response.ok && data.status === 'success' && data.categories) {
         setCategories(data.categories)
       } else {
-        setError('Failed to fetch categories')
+        setError(data.error || 'Failed to fetch categories')
       }
     } catch (error) {
       console.error('Error fetching categories:', error)
@@ -207,6 +210,12 @@ export default function AdminCategoriesPage() {
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">Error</h3>
               <div className="mt-2 text-sm text-red-700">{error}</div>
+              <button
+                onClick={fetchCategories}
+                className="mt-3 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Try Again
+              </button>
             </div>
           </div>
         </div>
