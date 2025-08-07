@@ -4,7 +4,8 @@ import bcrypt from 'bcryptjs'
 import { cookies } from 'next/headers'
 import { sign } from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret'
+// Use a consistent secret - this should match what's used in the middleware
+const JWT_SECRET = "jacksonville-home-pros-secret-key-2024"
 
 export async function POST(request: NextRequest) {
   try {

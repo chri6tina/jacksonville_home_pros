@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verify } from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret'
+// Use a consistent secret - this should match what's used in the login API
+const JWT_SECRET = "jacksonville-home-pros-secret-key-2024"
 
 export function middleware(request: NextRequest) {
   const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')

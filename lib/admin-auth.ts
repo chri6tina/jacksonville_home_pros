@@ -1,7 +1,8 @@
 import { cookies } from 'next/headers'
 import { verify } from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret'
+// Use a consistent secret - this should match what's used in the middleware and login API
+const JWT_SECRET = "jacksonville-home-pros-secret-key-2024"
 
 export interface AdminUser {
   id: string

@@ -41,18 +41,8 @@ export default function AdminLoginPage() {
 
       if (data.success) {
         console.log('Login successful, redirecting to admin...')
-        // Try router.push first, then fallback to window.location
-        try {
-          router.push('/admin')
-          // Fallback redirect after a short delay
-          setTimeout(() => {
-            console.log('Fallback redirect to /admin')
-            window.location.href = '/admin'
-          }, 1000)
-        } catch (redirectError) {
-          console.error('Router redirect failed:', redirectError)
-          window.location.href = '/admin'
-        }
+        // Use direct window.location redirect for immediate effect
+        window.location.href = '/admin'
       } else {
         setError('Login failed - unexpected response')
       }
