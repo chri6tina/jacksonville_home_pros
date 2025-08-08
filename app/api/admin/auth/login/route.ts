@@ -1,71 +1,41 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import bcrypt from 'bcryptjs'
-import { cookies } from 'next/headers'
-import { sign } from 'jsonwebtoken'
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+import { sign } from 'jsonwebtoken';
+import { prisma } from '@/lib/db';
+import bcrypt from 'bcryptjs';
 
-// Use a consistent secret
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || "jacksonville-home-pros-secret-key-2024"
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
+  console.log('Admin login attempt starting...');
+  
   try {
-    console.log('Admin login attempt starting...')
-    
-    const { email, password } = await request.json()
+    const body = await request.json();
+    const { email, password } = body;
 
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      )
-    }
+    console.log('Looking for admin user:', email);
 
-    console.log('Looking for admin user:', email)
-
-    // First, ensure we have an admin user (create if doesn't exist)
-    let user = await prisma.user.findFirst({
+    // Find the admin user
+    const user = await prisma.user.findFirst({
       where: {
-        email: email,
+        email,
         role: 'ADMIN'
       }
-    })
+    });
 
-    // If no admin user exists, create one
-    if (!user && email === 'admin@jacksonvillehomepros.com') {
-      console.log('Creating admin user...')
-      const hashedPassword = await bcrypt.hash('admin123', 12)
-      
-      user = await prisma.user.create({
-        data: {
-          email: 'admin@jacksonvillehomepros.com',
-          name: 'Admin User',
-          password: hashedPassword,
-          role: 'ADMIN',
-          emailVerified: new Date()
-        }
-      })
-      console.log('Admin user created successfully')
-    }
-
-    if (!user || !user.password) {
-      console.log('Invalid user or missing password')
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      )
+    if (!user) {
+      console.log('Admin user not found');
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password)
-    if (!isPasswordValid) {
-      console.log('Invalid password')
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      )
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      console.log('Password verification failed');
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    console.log('Password verified, creating token...')
+    console.log('Password verified, creating token...');
 
     // Create admin session token
     const token = sign(
@@ -77,42 +47,29 @@ export async function POST(request: NextRequest) {
       },
       JWT_SECRET,
       { expiresIn: '24h' }
-    )
+    );
 
     // Set admin session cookie
-    const cookieStore = await cookies()
-    cookieStore.set('admin-session', token, {
+    const cookieStore = cookies();
+    await cookieStore.set('admin-session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 // 24 hours
-    })
+    });
 
-    console.log('Login successful')
+    console.log('Login successful');
 
     return NextResponse.json({
-      success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role
-      }
-    })
+      status: 'success',
+      message: 'Logged in successfully'
+    });
 
-  } catch (error) {
-    console.error('Admin login error:', error)
-    
-    // Enhanced error details
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    console.error('Error details:', errorMessage)
-    
+  } catch (error: any) {
+    console.error('Login error:', error);
     return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
-      },
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
-    )
+    );
   }
 }
