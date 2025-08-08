@@ -51,27 +51,8 @@ export default function AdminDashboard() {
     try {
       setLoading(true)
       
-      // Check if using basic auth (skip database calls)
-      const hasBasicAuth = document.cookie.includes('admin-auth=true')
-      
-      if (hasBasicAuth) {
-        // Use mock data for basic auth mode
-        console.log('Using basic auth mode - loading mock data')
-        setStats({
-          totalProviders: 5,
-          activeProviders: 5,
-          pendingProviders: 0,
-          totalCategories: 8,
-          totalReviews: 12,
-          averageRating: 4.5
-        })
-        setRecentProviders([
-          { id: '1', businessName: 'Sample Provider 1', email: 'provider1@example.com', createdAt: new Date().toISOString() },
-          { id: '2', businessName: 'Sample Provider 2', email: 'provider2@example.com', createdAt: new Date().toISOString() }
-        ])
-        setCategoryStats([])
-        return
-      }
+      // Always try to fetch real data from database
+      console.log('Fetching real data from database')
       
       // Try database call for JWT auth
       const response = await fetch('/api/admin/dashboard')
