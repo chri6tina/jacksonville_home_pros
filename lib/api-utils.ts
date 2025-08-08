@@ -4,20 +4,7 @@ import { validateConnection } from './db';
 
 export async function withErrorHandling(action: () => Promise<any>) {
   try {
-    // Check database connection first
-    const dbStatus = await validateConnection();
-    if (!dbStatus.success) {
-      console.error('Database connection failed:', dbStatus);
-      return NextResponse.json(
-        {
-          error: 'Database connection error',
-          details: 'Unable to connect to the database. Please try again later.',
-        },
-        { status: 503 }
-      );
-    }
-
-    // Execute the action
+    // Execute the action directly - let Prisma handle connection issues
     const result = await action();
     return NextResponse.json(result);
   } catch (error) {

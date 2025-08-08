@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin-auth'
+import { withErrorHandling } from '@/lib/api-utils'
 
 export async function GET(request: NextRequest) {
-  try {
+  return withErrorHandling(async () => {
     // Verify admin authentication
     const adminUser = await requireAdmin()
     
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
       })
     ])
 
-    return NextResponse.json({
+    return {
       status: 'success',
       data: {
         stats: {
@@ -83,18 +84,6 @@ export async function GET(request: NextRequest) {
           createdAt: r.createdAt
         }))
       }
-    })
-
-  } catch (error) {
-    console.error('Admin dashboard error:', error)
-    
-    if (error instanceof Error && error.message === 'Admin access required') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 401 })
-    }
-    
-    return NextResponse.json(
-      { error: 'Failed to load dashboard data' },
-      { status: 500 }
-    )
-  }
+    };
+  });
 } 
