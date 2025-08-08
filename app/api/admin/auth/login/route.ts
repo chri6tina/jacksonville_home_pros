@@ -56,13 +56,20 @@ export async function POST(request: Request) {
     );
 
     // Set admin session cookie
-    const cookieStore = cookies();
-    await cookieStore.set('admin-session', token, {
+    const response = NextResponse.json({
+      status: 'success',
+      message: 'Logged in successfully'
+    });
+
+    // Set the cookie on the response
+    response.cookies.set('admin-session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 // 24 hours
     });
+
+    return response;
 
     console.log('Login successful');
 
