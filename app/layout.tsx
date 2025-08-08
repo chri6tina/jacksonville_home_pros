@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { Inter, Poppins } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
+import JsonLd from '@/components/seo/json-ld'
+import { SeoBaseUrl } from '@/lib/seo'
 import { Providers } from '@/components/providers'
 
 const inter = Inter({ 
@@ -105,6 +107,40 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://api.mapbox.com" />
         <link rel="preconnect" href="https://res.cloudinary.com" />
+
+        {/* Organization & WebSite JSON-LD */}
+        <JsonLd
+          data={{
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'Jacksonville Home Pros',
+            url: SeoBaseUrl,
+            logo: `${SeoBaseUrl}/favicon.ico`,
+            contactPoint: [
+              {
+                '@type': 'ContactPoint',
+                telephone: '+1-904-555-1234',
+                email: 'hello@jacksonvillehomeprofessionals.com',
+                contactType: 'customer service',
+                areaServed: 'US',
+                availableLanguage: 'en',
+              },
+            ],
+          }}
+        />
+        <JsonLd
+          data={{
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'Jacksonville Home Pros',
+            url: SeoBaseUrl,
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: `${SeoBaseUrl}/search?search={search_term_string}`,
+              'query-input': 'required name=search_term_string',
+            },
+          }}
+        />
       </head>
       <body className={`${inter.className} antialiased bg-white text-neutral-900`}>
         <Providers>

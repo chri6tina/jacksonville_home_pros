@@ -1,6 +1,8 @@
 import { Metadata } from 'next'
 import { prisma } from '@/lib/db'
 import { CategoriesPageClient } from './categories-page-client'
+import JsonLd from '@/components/seo/json-ld'
+import { SeoBaseUrl } from '@/lib/seo'
 
 export const metadata: Metadata = {
   title: 'Home Services in Jacksonville, FL | Jacksonville Home Pros',
@@ -156,7 +158,7 @@ export default async function CategoriesPage() {
       "@type": "ItemList",
       "name": "Home Services in Jacksonville",
       "description": "Browse categories of home services available in Jacksonville, Florida",
-      "url": "https://www.jacksonvillehomeprofessionals.com/categories",
+      "url": `${SeoBaseUrl}/categories`,
       "numberOfItems": transformedCategories.length,
       "itemListElement": transformedCategories.map((category, index) => ({
         "@type": "ListItem",
@@ -165,7 +167,7 @@ export default async function CategoriesPage() {
           "@type": "Service",
           "name": category.name,
           "description": category.description,
-          "url": `https://www.jacksonvillehomeprofessionals.com/categories/${category.slug}`,
+          "url": `${SeoBaseUrl}/categories/${category.slug}`,
           "provider": {
             "@type": "Organization",
             "name": "Jacksonville Home Pros"
@@ -176,9 +178,16 @@ export default async function CategoriesPage() {
 
     return (
       <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        <JsonLd data={structuredData} />
+        <JsonLd
+          data={{
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: SeoBaseUrl },
+              { '@type': 'ListItem', position: 2, name: 'Categories', item: `${SeoBaseUrl}/categories` },
+            ],
+          }}
         />
         <CategoriesPageClient categories={transformedCategories} />
       </>
@@ -192,7 +201,7 @@ export default async function CategoriesPage() {
       "@type": "ItemList",
       "name": "Home Services in Jacksonville",
       "description": "Browse categories of home services available in Jacksonville, Florida",
-      "url": "https://www.jacksonvillehomeprofessionals.com/categories",
+      "url": `${SeoBaseUrl}/categories`,
       "numberOfItems": fallbackCategories.length,
       "itemListElement": fallbackCategories.map((category, index) => ({
         "@type": "ListItem",
@@ -201,7 +210,7 @@ export default async function CategoriesPage() {
           "@type": "Service",
           "name": category.name,
           "description": category.description,
-          "url": `https://www.jacksonvillehomeprofessionals.com/categories/${category.slug}`,
+          "url": `${SeoBaseUrl}/categories/${category.slug}`,
           "provider": {
             "@type": "Organization",
             "name": "Jacksonville Home Pros"
@@ -212,9 +221,16 @@ export default async function CategoriesPage() {
 
     return (
       <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        <JsonLd data={structuredData} />
+        <JsonLd
+          data={{
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: SeoBaseUrl },
+              { '@type': 'ListItem', position: 2, name: 'Categories', item: `${SeoBaseUrl}/categories` },
+            ],
+          }}
         />
         <CategoriesPageClient categories={fallbackCategories} />
       </>

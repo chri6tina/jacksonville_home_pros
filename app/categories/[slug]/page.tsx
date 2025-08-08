@@ -2,6 +2,8 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { CategoryPageClient } from './category-page-client'
+import JsonLd from '@/components/seo/json-ld'
+import { SeoBaseUrl } from '@/lib/seo'
 
 // Generate static params for all categories
 export async function generateStaticParams() {
@@ -124,10 +126,45 @@ export default async function CategoryPage({ params }: {
       children: category.children
     }
 
+    const breadcrumbJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SeoBaseUrl },
+        { '@type': 'ListItem', position: 2, name: 'Categories', item: `${SeoBaseUrl}/categories` },
+        { '@type': 'ListItem', position: 3, name: categoryData.name, item: `${SeoBaseUrl}/categories/${categoryData.slug}` },
+      ],
+    }
+
+    const faqItems = [
+      {
+        question: `What do ${categoryData.name.toLowerCase()} providers do?`,
+        answer: `Licensed Jacksonville ${categoryData.name.toLowerCase()} pros that handle common residential needs.`,
+      },
+      {
+        question: `How soon can I book ${categoryData.name.toLowerCase()} services?`,
+        answer: 'Availability varies; many providers can schedule within a few days.',
+      },
+    ]
+
+    const faqJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: f.answer },
+      })),
+    }
+
     return (
-      <CategoryPageClient 
-        category={categoryData}
-      />
+      <>
+        <JsonLd data={breadcrumbJsonLd} />
+        <JsonLd data={faqJsonLd} />
+        <CategoryPageClient 
+          category={categoryData}
+        />
+      </>
     )
   } catch (error) {
     console.error('Error in CategoryPage:', error)
