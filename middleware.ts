@@ -5,12 +5,12 @@ export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   console.log('Middleware - Path:', path)
   
-  // Handle admin routes completely separate from NextAuth
+  // Handle admin routes with simple authentication
   if (path.startsWith('/admin')) {
     console.log('Middleware - Admin route detected')
     
-    // Always allow admin login page
-    if (path === '/admin/login') {
+    // Always allow admin login pages
+    if (path === '/admin/login' || path === '/admin/simple-login') {
       console.log('Middleware - Allowing admin login page')
       return NextResponse.next()
     }
@@ -20,8 +20,8 @@ export function middleware(request: NextRequest) {
     console.log('Middleware - Admin session exists:', !!adminSession)
     
     if (!adminSession) {
-      console.log('Middleware - No admin session, redirecting to admin login')
-      const loginUrl = new URL('/admin/login', request.url)
+      console.log('Middleware - No admin session, redirecting to simple login')
+      const loginUrl = new URL('/admin/simple-login', request.url)
       return NextResponse.redirect(loginUrl)
     }
     
