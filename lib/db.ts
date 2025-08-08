@@ -1,11 +1,10 @@
 import { PrismaClient } from '@prisma/client'
 
-// Enhanced database connection validation
+// Enhanced database connection validation using existing client
 export async function validateConnection() {
   try {
-    const testClient = new PrismaClient()
-    await testClient.$queryRaw`SELECT 1`
-    await testClient.$disconnect()
+    // Use the existing prisma client instead of creating a new one
+    await prisma.$queryRaw`SELECT 1`
     return { success: true }
   } catch (error: any) {
     console.error('Database connection failed:', error)
