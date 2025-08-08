@@ -28,7 +28,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Verify password
+    // Verify password exists
+    if (!user.password) {
+      console.log('User has no password set');
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    }
+
+    // Verify password matches
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
       console.log('Password verification failed');
