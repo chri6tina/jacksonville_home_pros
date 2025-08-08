@@ -24,11 +24,16 @@ const globalForPrisma = globalThis as unknown as {
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   datasources: {
     db: {
-      url: process.env.DATABASE_URL + '?pgbouncer=true&connection_limit=1&pool_timeout=20',
+      // Ensure we're using transaction pooler (port 6543) with proper settings
+      url: process.env.DATABASE_URL?.includes(':6543') 
+        ? process.env.DATABASE_URL + '?pgbouncer=true&connection_limit=1&pool_timeout=20'
+        : process.env.DATABASE_URL?.replace(':5432', ':6543') + '?pgbouncer=true&connection_limit=1&pool_timeout=20',
     },
   },
-  // Log settings
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  // Log settings for debugging connection issues
+  log: process.env.NODE_ENV === 'development' 
+    ? ['query', 'error', 'warn'] 
+    : ['error', 'warn'],
   // Improve error formatting
   errorFormat: 'pretty',
 })
