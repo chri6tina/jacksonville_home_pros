@@ -19,6 +19,8 @@ import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
 import Link from 'next/link'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import JsonLd from '@/components/seo/json-ld'
+import { SeoBaseUrl } from '@/lib/seo'
 
 interface Provider {
   id: string
@@ -52,6 +54,9 @@ interface Provider {
   address?: string
   city?: string
   state?: string
+  // Optional hours fields that may be provided at signup later
+  openingHours?: string[]
+  hours?: Array<{ day: string; open: string; close: string }>
 }
 
 export default function ProviderPage() {
@@ -140,6 +145,67 @@ export default function ProviderPage() {
     )
   }
 
+  const buildProviderJsonLd = (p: Provider) => {
+    const images = (p.images || []).map(img => img.url).filter(Boolean)
+    const jsonLd: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type': 'LocalBusiness',
+      name: p.businessName,
+      url: `${SeoBaseUrl}/providers/${providerSlug}`,
+    }
+    if (p.phone) (jsonLd as any).telephone = p.phone
+    if (p.email) (jsonLd as any).email = p.email
+    if (p.website) (jsonLd as any).sameAs = [p.website]
+    if (images.length > 0) {
+      ;(jsonLd as any).image = images
+    } else {
+      ;(jsonLd as any).image = [`${SeoBaseUrl}/images/default-provider.svg`]
+    }
+    if (p.address || p.city || p.state) {
+      ;(jsonLd as any).address = {
+        '@type': 'PostalAddress',
+        streetAddress: p.address || undefined,
+        addressLocality: p.city || undefined,
+        addressRegion: p.state || undefined,
+        addressCountry: 'US',
+      }
+    }
+    const ratingValue = p.googleRating || p.rating
+    const reviewCount = p.googleReviewCount || p.reviewCount
+    if (typeof ratingValue === 'number' && typeof reviewCount === 'number' && reviewCount > 0) {
+      ;(jsonLd as any).aggregateRating = {
+        '@type': 'AggregateRating',
+        ratingValue,
+        reviewCount,
+      }
+    }
+    if (p.services && p.services.length > 0) {
+      ;(jsonLd as any).serviceType = p.services.map(s => s.categoryName)
+    }
+    // Optional opening hours (two flexible inputs)
+    if (Array.isArray(p.openingHours) && p.openingHours.length > 0) {
+      ;(jsonLd as any).openingHours = p.openingHours
+    } else if (Array.isArray(p.hours) && p.hours.length > 0) {
+      ;(jsonLd as any).openingHoursSpecification = p.hours.map(h => ({
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: h.day,
+        opens: h.open,
+        closes: h.close,
+      }))
+    }
+    return jsonLd
+  }
+
+  const buildBreadcrumbJsonLd = (p: Provider) => ({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SeoBaseUrl },
+      { '@type': 'ListItem', position: 2, name: 'Providers', item: `${SeoBaseUrl}/search` },
+      { '@type': 'ListItem', position: 3, name: p.businessName, item: `${SeoBaseUrl}/providers/${providerSlug}` },
+    ],
+  })
+
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % provider.images.length)
   }
@@ -164,6 +230,8 @@ export default function ProviderPage() {
   return (
     <div className="min-h-screen bg-neutral-50">
       <Header />
+      <JsonLd data={buildProviderJsonLd(provider)} />
+      <JsonLd data={buildBreadcrumbJsonLd(provider)} />
       
       <main>
         {/* Hero Section */}
@@ -481,11 +549,15 @@ export default function ProviderPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <div className="w-32 h-32 mx-auto bg-neutral-200 rounded-xl flex items-center justify-center mb-4">
-                      <span className="text-4xl">🏠</span>
+                  <div className="text-center py-6">
+                    <div className="relative bg-neutral-200 rounded-xl overflow-hidden aspect-video mb-4">
+                      <img
+                        src="/images/default-provider.svg"
+                        alt={provider.businessName}
+                        className="w-full h-full object-contain p-8"
+                      />
                     </div>
-                    <p className="text-neutral-600">No photos available yet.</p>
+                    <p className="text-neutral-600 text-sm">Provider hasn’t added photos yet.</p>
                   </div>
                 )}
               </div>
