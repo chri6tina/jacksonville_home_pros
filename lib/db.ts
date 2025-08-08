@@ -24,17 +24,13 @@ const globalForPrisma = globalThis as unknown as {
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   datasources: {
     db: {
-      url: process.env.DATABASE_URL,
+      url: process.env.DATABASE_URL + '?pgbouncer=true&connection_limit=1&pool_timeout=20',
     },
   },
-  // Serverless configuration for Vercel
+  // Log settings
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  // Connection pooling and retry settings
+  // Improve error formatting
   errorFormat: 'pretty',
-  transactionOptions: {
-    maxWait: 5000, // 5 seconds
-    timeout: 10000, // 10 seconds
-  }
 })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma 
