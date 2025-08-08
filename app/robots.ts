@@ -14,6 +14,6 @@ export default function robots(): MetadataRoute.Robots {
         '/private/',
       ],
     },
-    sitemap: 'https://jacksonvillehomepros.com/sitemap.xml',
+    sitemap: 'https://www.jacksonvillehomeprofessionals.com/sitemap.xml',
   }
 } 

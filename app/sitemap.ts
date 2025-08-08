@@ -1,7 +1,33 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://jacksonvillehomepros.com'
+  const baseUrl = 'https://www.jacksonvillehomeprofessionals.com'
+
+  const serviceSlugs = [
+    'plumbing',
+    'electrical',
+    'hvac',
+    'painting',
+    'handyman',
+    'landscaping',
+    'cleaning',
+    'roofing',
+    'remodeling',
+    'carpentry',
+    'moving',
+    'pest-control',
+    'pressure-washing',
+    'tiling',
+    'drywall',
+    'fences',
+    'doors',
+    'window-coverings',
+    'smart-home',
+    'furniture-assembly',
+    'appliance-installation',
+    'senior-modifications',
+    'baby-proofing',
+  ] as const
   
   return [
     {
@@ -88,5 +114,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.8,
     },
+    // Services index (optional landing if ever created)
+    // { url: `${baseUrl}/services`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    // Individual service pages
+    ...serviceSlugs.map((slug) => ({
+      url: `${baseUrl}/services/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    })),
   ]
 } 

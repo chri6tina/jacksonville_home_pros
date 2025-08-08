@@ -70,7 +70,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       openGraph: {
         title,
         description,
-        url: `https://jacksonvillehomepros.com/categories/${category.slug}`,
+        url: `https://www.jacksonvillehomeprofessionals.com/categories/${category.slug}`,
         images: [
           {
             url: `/images/categories/${category.slug}.jpg`,

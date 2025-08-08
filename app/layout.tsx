@@ -43,14 +43,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://jacksonvillehomepros.com'),
+  metadataBase: new URL('https://www.jacksonvillehomeprofessionals.com'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://jacksonvillehomepros.com',
+    url: 'https://www.jacksonvillehomeprofessionals.com',
     title: 'Jacksonville Home Pros - Find Local Home Service Providers',
     description: 'Find and book trusted home service providers in Jacksonville, Florida. From plumbing and electrical to landscaping and remodeling - connect with local professionals.',
     siteName: 'Jacksonville Home Pros',

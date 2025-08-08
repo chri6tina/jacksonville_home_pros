@@ -217,8 +217,8 @@ export default function ContactPage() {
                   <div>
                     <h3 className="text-lg font-semibold text-neutral-900 mb-2">Email</h3>
                     <p className="text-neutral-600">
-                      <a href="mailto:hello@jacksonvillehomepros.com" className="hover:text-primary-600 transition-colors">
-                        hello@jacksonvillehomepros.com
+                      <a href="mailto:hello@jacksonvillehomeprofessionals.com" className="hover:text-primary-600 transition-colors">
+                        hello@jacksonvillehomeprofessionals.com
                       </a>
                     </p>
                     <p className="text-sm text-neutral-500 mt-1">

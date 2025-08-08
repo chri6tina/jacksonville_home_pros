@@ -124,8 +124,8 @@ export function Footer() {
               </div>
               <div className="flex items-center space-x-3">
                 <EnvelopeIcon className="w-5 h-5 text-primary-400" />
-                <a href="mailto:hello@jacksonvillehomepros.com" className="text-neutral-300 hover:text-white transition-colors">
-                  hello@jacksonvillehomepros.com
+                <a href="mailto:hello@jacksonvillehomeprofessionals.com" className="text-neutral-300 hover:text-white transition-colors">
+                  hello@jacksonvillehomeprofessionals.com
                 </a>
               </div>
             </div>

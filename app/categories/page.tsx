@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Home Services in Jacksonville, FL | Jacksonville Home Pros',
     description: 'Find trusted home service providers in Jacksonville, Florida. Browse categories including plumbing, electrical, HVAC, landscaping, painting, handyman, roofing, and cleaning services.',
-    url: 'https://jacksonvillehomepros.com/categories',
+      url: 'https://www.jacksonvillehomeprofessionals.com/categories',
     images: [
       {
         url: '/images/categories/services-overview.jpg',
@@ -156,7 +156,7 @@ export default async function CategoriesPage() {
       "@type": "ItemList",
       "name": "Home Services in Jacksonville",
       "description": "Browse categories of home services available in Jacksonville, Florida",
-      "url": "https://jacksonvillehomepros.com/categories",
+      "url": "https://www.jacksonvillehomeprofessionals.com/categories",
       "numberOfItems": transformedCategories.length,
       "itemListElement": transformedCategories.map((category, index) => ({
         "@type": "ListItem",
@@ -165,7 +165,7 @@ export default async function CategoriesPage() {
           "@type": "Service",
           "name": category.name,
           "description": category.description,
-          "url": `https://jacksonvillehomepros.com/categories/${category.slug}`,
+          "url": `https://www.jacksonvillehomeprofessionals.com/categories/${category.slug}`,
           "provider": {
             "@type": "Organization",
             "name": "Jacksonville Home Pros"
@@ -192,7 +192,7 @@ export default async function CategoriesPage() {
       "@type": "ItemList",
       "name": "Home Services in Jacksonville",
       "description": "Browse categories of home services available in Jacksonville, Florida",
-      "url": "https://jacksonvillehomepros.com/categories",
+      "url": "https://www.jacksonvillehomeprofessionals.com/categories",
       "numberOfItems": fallbackCategories.length,
       "itemListElement": fallbackCategories.map((category, index) => ({
         "@type": "ListItem",
@@ -201,7 +201,7 @@ export default async function CategoriesPage() {
           "@type": "Service",
           "name": category.name,
           "description": category.description,
-          "url": `https://jacksonvillehomepros.com/categories/${category.slug}`,
+          "url": `https://www.jacksonvillehomeprofessionals.com/categories/${category.slug}`,
           "provider": {
             "@type": "Organization",
             "name": "Jacksonville Home Pros"
