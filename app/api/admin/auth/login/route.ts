@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { sign } from 'jsonwebtoken';
-import { prisma } from '@/lib/db';
+import { prisma, validateConnection } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -10,8 +10,28 @@ export async function POST(request: Request) {
   console.log('Admin login attempt starting...');
   
   try {
+    // Check database connectivity first
+    const dbStatus = await validateConnection();
+    if (!dbStatus.success) {
+      console.error('Database connection failed:', dbStatus);
+      return NextResponse.json(
+        { 
+          error: 'Database connection error',
+          details: 'Unable to connect to the database. Please try again later.',
+        }, 
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const { email, password } = body;
+
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: 'Email and password are required' },
+        { status: 400 }
+      );
+    }
 
     console.log('Looking for admin user:', email);
 
