@@ -49,6 +49,7 @@ export async function GET(
           }
         },
         reviews: true,
+        images: true,
         user: {
           select: {
             email: true
@@ -60,7 +61,7 @@ export async function GET(
       }
     })
 
-    // Transform the data to match the frontend interface
+    // Transform the data to match ProviderCard expectations
     const transformedProviders = providers.map(provider => {
       // Calculate average rating
       const totalRating = provider.reviews.reduce((sum, review) => sum + review.rating, 0)
@@ -74,17 +75,26 @@ export async function GET(
       return {
         id: provider.id,
         businessName: provider.businessName,
+        slug: provider.slug,
         description: provider.description,
-        rating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
+        rating: Math.round(averageRating * 10) / 10,
         reviewCount: provider.reviews.length,
-        location: `${provider.city}, ${provider.state}`,
-        services: categoryServices.map(service => service.category.name),
+        googleRating: provider.googleRating ?? Math.round(averageRating * 10) / 10,
+        googleReviewCount: provider.googleReviewCount ?? provider.reviews.length,
+        location: `${provider.city || ''}${provider.city && provider.state ? ', ' : ''}${provider.state || ''}`,
+        services: categoryServices.map(service => ({
+          id: service.id,
+          categoryId: service.categoryId,
+          categoryName: service.category.name,
+          categorySlug: service.category.slug,
+        })),
         verified: provider.verified,
         premium: provider.premium,
         phone: provider.phone,
         email: provider.user.email,
         website: provider.website || '',
-        image: '/images/providers/default.jpg', // Default image
+        image: provider.images.length > 0 ? provider.images[0].url : '/images/default-provider.svg',
+        images: provider.images.map(img => ({ id: img.id, url: img.url, alt: img.alt, type: img.type })),
         sortOrder: provider.sortOrder
       }
     })

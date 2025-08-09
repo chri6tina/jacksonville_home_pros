@@ -85,7 +85,7 @@ export function CategoryPageClient({ category, successMessage }: CategoryPageCli
         setError(null)
         
         console.log('Fetching providers for category:', category.slug)
-        const response = await fetch(`/api/test-providers?category=${category.slug}&t=${Date.now()}`)
+        const response = await fetch(`/api/categories/${category.slug}/providers?t=${Date.now()}`)
         const data = await response.json()
         
         console.log('Category providers API response:', data)
