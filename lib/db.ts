@@ -21,20 +21,32 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
+function buildPooledDatabaseUrl(raw?: string): string | undefined {
+  if (!raw) return undefined
+  // Ensure 6543 (transaction pooling) is used
+  let pooled = raw.includes(':6543') ? raw : raw.replace(':5432', ':6543')
+  const params = 'pgbouncer=true&connection_limit=1&pool_timeout=20'
+  // Append params correctly whether or not a query already exists
+  if (pooled.includes('?')) {
+    // Avoid duplicating params if already present
+    if (!pooled.includes('pgbouncer=true')) {
+      pooled = pooled + (pooled.endsWith('?') || pooled.endsWith('&') ? '' : '&') + params
+    }
+  } else {
+    pooled = pooled + '?' + params
+  }
+  return pooled
+}
+
+const pooledUrl = buildPooledDatabaseUrl(process.env.DATABASE_URL)
+
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   datasources: {
     db: {
-      // Ensure we're using transaction pooler (port 6543) with proper settings
-      url: process.env.DATABASE_URL?.includes(':6543') 
-        ? process.env.DATABASE_URL + '?pgbouncer=true&connection_limit=1&pool_timeout=20'
-        : process.env.DATABASE_URL?.replace(':5432', ':6543') + '?pgbouncer=true&connection_limit=1&pool_timeout=20',
+      url: pooledUrl,
     },
   },
-  // Log settings for debugging connection issues
-  log: process.env.NODE_ENV === 'development' 
-    ? ['query', 'error', 'warn'] 
-    : ['error', 'warn'],
-  // Improve error formatting
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error', 'warn'],
   errorFormat: 'pretty',
 })
 
