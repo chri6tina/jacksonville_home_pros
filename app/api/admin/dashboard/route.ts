@@ -74,16 +74,18 @@ export async function GET(request: NextRequest) {
         recentProviders: recentProviders.map(p => ({
           id: p.id,
           businessName: p.businessName,
-          email: p.user.email,
-          createdAt: p.createdAt
+          email: p.user?.email ?? '',
+          createdAt: p.createdAt.toISOString()
         })),
         recentReviews: recentReviews.map(r => ({
           id: r.id,
           rating: r.rating,
-          providerName: r.provider.businessName,
-          createdAt: r.createdAt
+          providerName: r.provider?.businessName ?? 'Unknown',
+          createdAt: r.createdAt.toISOString()
         }))
       }
     };
   });
 } 
+
+export const runtime = 'nodejs'

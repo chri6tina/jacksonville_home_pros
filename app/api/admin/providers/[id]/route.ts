@@ -48,6 +48,8 @@ export async function PATCH(
   }
 }
 
+export const runtime = 'nodejs'
+
 // DELETE - Delete provider
 export async function DELETE(
   request: NextRequest,

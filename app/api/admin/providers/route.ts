@@ -51,7 +51,9 @@ export async function GET(request: NextRequest) {
         businessName: provider.businessName,
         description: provider.description,
         phone: provider.phone,
-        email: provider.user.email,
+        email: provider.user?.email ?? '',
+        city: provider.city,
+        state: provider.state,
         website: provider.website,
         verified: provider.verified,
         premium: provider.premium,
@@ -71,3 +73,5 @@ export async function GET(request: NextRequest) {
     };
   });
 } 
+
+export const runtime = 'nodejs'

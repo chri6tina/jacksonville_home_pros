@@ -30,23 +30,48 @@ function ensureSslParam(url: string): string {
 
 function buildDatabaseUrl(raw?: string): string | undefined {
   if (!raw) return undefined
-  let url = ensureSslParam(raw)
-  // Use PgBouncer transaction pooler only in production (serverless)
-  if (process.env.NODE_ENV === 'production') {
-    // Ensure 6543 (transaction pooling) is used
-    let pooled = url.includes(':6543') ? url : url.replace(':5432', ':6543')
-    const params = 'pgbouncer=true&connection_limit=1&pool_timeout=20'
-    if (pooled.includes('?')) {
-      if (!pooled.includes('pgbouncer=true')) {
-        pooled = pooled + (pooled.endsWith('?') || pooled.endsWith('&') ? '' : '&') + params
-      }
-    } else {
-      pooled = pooled + '?' + params
+
+  // Always ensure sslmode=require
+  let urlString = ensureSslParam(raw)
+
+  // Prefer robust URL mutation; fall back to string ops if parsing fails
+  try {
+    const parsed = new URL(urlString)
+
+    if (process.env.NODE_ENV === 'production') {
+      // Force pooled port 6543 even if the original URL had no explicit port
+      parsed.port = '6543'
+      // Required params for transaction pooling
+      parsed.searchParams.set('pgbouncer', 'true')
+      parsed.searchParams.set('connection_limit', '1')
+      parsed.searchParams.set('pool_timeout', '20')
     }
-    return pooled
+
+    // Ensure sslmode=require (again, in case URL parsing normalized it)
+    if (parsed.searchParams.get('sslmode') !== 'require') {
+      parsed.searchParams.set('sslmode', 'require')
+    }
+
+    return parsed.toString()
+  } catch {
+    // Fallback: original behavior with safer replacements
+    if (process.env.NODE_ENV === 'production') {
+      let pooled = urlString
+      if (!pooled.includes(':6543')) {
+        // Insert :6543 after host if no explicit port is present
+        pooled = pooled.includes(':5432')
+          ? pooled.replace(':5432', ':6543')
+          : pooled.replace('.supabase.co', '.supabase.co:6543')
+      }
+      const extras = ['pgbouncer=true', 'connection_limit=1', 'pool_timeout=20']
+      const hasQuery = pooled.includes('?')
+      const separator = hasQuery ? (pooled.endsWith('?') || pooled.endsWith('&') ? '' : '&') : '?'
+      const missing = extras.filter((e) => !pooled.includes(e)).join('&')
+      if (missing) pooled = pooled + separator + missing
+      return pooled
+    }
+    return urlString
   }
-  // In development, connect directly to 5432 for reliability
-  return url
 }
 
 const databaseUrl = buildDatabaseUrl(process.env.DATABASE_URL)
